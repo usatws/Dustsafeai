@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DustSafeAI Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Familjen+Grotesk:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:transparent;overflow:hidden}
+:root{
+  --y:#F5C518;--yd:#d9a800;--yg:rgba(245,197,24,.1);--yb:rgba(245,197,24,.22);
+  --ink:#050506;--s1:#0a0a0b;--s2:#101012;--s3:#161618;--s4:#202023;
+  --border:#1c1c1f;--bhi:#2a2a2e;
+  --text:#e8e8ea;--muted:#5c5c6b;--ghost:#222228;
+  --red:#F04444;--rdim:rgba(240,68,68,.1);--rborder:rgba(240,68,68,.25);
+  --green:#22C55E;--gdim:rgba(34,197,94,.1);--gborder:rgba(34,197,94,.25);
+  --amber:#FBBF24;
+  --blue:#60A5FA;--bdim:rgba(96,165,250,.1);--bborder:rgba(96,165,250,.2);
+  --D:'Bebas Neue',sans-serif;--B:'Familjen Grotesk',system-ui,sans-serif;
+}
+
+/* ── DEMO WRAPPER ── */
+.demo-wrap{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  background:var(--s2);border-radius:12px;overflow:hidden;
+  font-family:var(--B);
+  position:relative;
+}
+
+/* ── BROWSER CHROME ── */
+.chrome{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:.5rem .75rem;display:flex;align-items:center;gap:.625rem;
+  flex-shrink:0;
+}
+.chrome-dots{display:flex;gap:5px}
+.cd{width:10px;height:10px;border-radius:50%}
+.cd1{background:#FF5F57}.cd2{background:#FFBD2E}.cd3{background:#28C840}
+.chrome-url{
+  flex:1;background:var(--s3);border:1px solid var(--border);
+  border-radius:20px;padding:3px 12px;
+  font-size:11px;color:var(--muted);font-family:monospace;
+  display:flex;align-items:center;gap:6px;
+}
+.url-lock{font-size:9px;color:var(--green)}
+.chrome-r{margin-left:auto;display:flex;gap:6px}
+
+/* ── SCANNER TOP BAR (inside browser) ── */
+.s-topbar{
+  height:44px;display:flex;align-items:center;gap:10px;
+  padding:0 1rem;background:rgba(5,5,6,.97);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.s-logo{font-family:var(--D);font-size:18px;color:var(--y);letter-spacing:.04em}
+.s-logo span{color:var(--muted)}
+.s-save{margin-left:auto;font-size:10px;color:var(--muted);padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:var(--s3)}
+.s-save.saved{color:var(--green)}
+.s-step{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* ── PROGRESS BAR ── */
+.s-prog{height:2px;background:var(--border);flex-shrink:0;position:relative}
+.s-prog-fill{height:100%;background:var(--y);transition:width .6s ease}
+
+/* ── SCENE CONTAINER ── */
+.scenes{flex:1;overflow:hidden;position:relative;min-height:0}
+.scene{
+  position:absolute;inset:0;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .4s ease,transform .4s ease;
+  overflow-y:auto;pointer-events:none;
+}
+.scene.active{opacity:1;transform:translateY(0);pointer-events:auto}
+.scene-pad{padding:1.25rem 1.5rem}
+
+/* ── SCENE LABELS ── */
+.scene-label{
+  position:absolute;bottom:52px;left:50%;transform:translateX(-50%);
+  background:rgba(5,5,6,.85);backdrop-filter:blur(8px);
+  border:1px solid var(--border);border-radius:20px;
+  padding:4px 14px;font-size:11px;color:var(--muted);
+  white-space:nowrap;z-index:10;letter-spacing:.04em;
+}
+
+/* ── CONTROLS ── */
+.controls{
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:.5rem .875rem;display:flex;align-items:center;gap:.75rem;flex-shrink:0;
+}
+.ctrl-play{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--y);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .14s;
+}
+.ctrl-play:hover{background:var(--yd)}
+.ctrl-play svg{margin-left:1px}
+.ctrl-bar{flex:1;height:3px;background:var(--border);border-radius:2px;cursor:pointer;position:relative}
+.ctrl-fill{height:100%;background:var(--y);border-radius:2px;transition:width .3s linear}
+.ctrl-thumb{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;border-radius:50%;background:var(--y);
+  margin-left:-5px;transition:left .3s linear;
+}
+.ctrl-time{font-size:10px;color:var(--muted);font-family:monospace;flex-shrink:0}
+.ctrl-scenes{display:flex;gap:4px;flex-shrink:0}
+.cs-dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .14s}
+.cs-dot.active{background:var(--y)}
+.cs-dot.done{background:var(--bhi)}
+
+/* ── TYPOGRAPHY ── */
+.eye{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin-bottom:.4rem}
+.ttl{font-family:var(--D);font-size:clamp(22px,4vw,34px);letter-spacing:.02em;color:var(--text);line-height:1;margin-bottom:.4rem}
+.ttl em{font-style:normal;color:var(--y)}
+.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:1rem}
+
+/* ── FORM FIELDS ── */
+.fg{margin-bottom:.625rem}
+.fg label{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--y);margin-bottom:3px}
+.fg input,.fg select{
+  width:100%;background:var(--s3);border:1px solid var(--border);
+  border-radius:4px;color:var(--text);font-family:var(--B);font-size:12px;
+  padding:7px 10px;outline:none;
+}
+.fg input.active{border-color:var(--y)}
+.fg-2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.cursor{display:inline-block;width:2px;height:13px;background:var(--y);animation:blink .8s infinite;vertical-align:middle;margin-left:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── SCHEMA DROP ── */
+.schema-drop{
+  border:2px dashed var(--bhi);border-radius:6px;
+  padding:1.5rem 1rem;text-align:center;transition:all .3s;
+}
+.schema-drop.drag{border-color:var(--y);background:var(--yg)}
+.schema-drop.done{border:1px solid var(--gborder);background:var(--gdim);padding:1rem}
+.sd-icon{font-size:28px;margin-bottom:.5rem}
+.sd-title{font-family:var(--D);font-size:16px;letter-spacing:.04em;color:var(--text);margin-bottom:.2rem}
+.sd-sub{font-size:11px;color:var(--muted)}
+.schema-confirmed{display:flex;align-items:center;gap:.75rem}
+.sc-icon{font-size:20px}
+.sc-name{font-size:12px;font-weight:600;color:var(--text)}
+.sc-size{font-size:10px;color:var(--muted)}
+.sc-check{margin-left:auto;width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink);font-weight:700}
+
+/* ── CHECKPOINTS ── */
+.cp{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:6px;margin-bottom:.625rem;overflow:hidden;transition:border-color .3s;
+}
+.cp.risk{border-color:var(--rborder)}
+.cp.good{border-color:var(--gborder)}
+.cp.review{border-color:rgba(251,191,36,.3)}
+.cp-hd{padding:.75rem 1rem;display:flex;align-items:flex-start;gap:.75rem}
+.cp-num{font-family:var(--D);font-size:18px;color:var(--ghost);flex-shrink:0;width:22px;line-height:1;margin-top:1px}
+.cp-info{flex:1}
+.cp-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.cp-ref{font-size:9px;color:var(--muted);font-family:monospace}
+.cp-badge{font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:20px;flex-shrink:0;margin-top:2px}
+.bn{color:var(--muted);background:var(--s4);border:1px solid var(--border)}
+.bg{color:var(--green);background:var(--gdim);border:1px solid var(--gborder)}
+.ba{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25)}
+.br{color:var(--red);background:var(--rdim);border:1px solid var(--rborder)}
+
+.cp-body{padding:.625rem 1rem 1rem;border-top:1px solid var(--border)}
+.status-row{display:flex;gap:6px;margin-bottom:.625rem}
+.sb{flex:1;border:1px solid var(--border);background:var(--s3);border-radius:4px;padding:6px 4px;font-family:var(--B);font-size:11px;font-weight:600;color:var(--muted);text-align:center}
+.sb.active-r{background:var(--rdim);border-color:var(--rborder);color:var(--red)}
+.sb.active-g{background:var(--gdim);border-color:var(--gborder);color:var(--green)}
+.sb.active-a{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--amber)}
+.loc-field{width:100%;background:var(--s3);border:1px solid var(--y);border-radius:4px;color:var(--text);font-family:var(--B);font-size:11px;padding:6px 9px;outline:none;margin-bottom:.5rem}
+.photo-zone{border:1.5px dashed var(--bhi);border-radius:4px;padding:.625rem;text-align:center;font-size:11px;color:var(--muted)}
+.photo-thumb-row{display:flex;gap:6px;margin-bottom:.5rem}
+.ph-th{width:52px;height:52px;border-radius:4px;background:var(--s4);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px}
+
+/* ── ZONE SIDEBAR ── */
+.zone-shell{display:grid;grid-template-columns:160px 1fr;height:100%}
+@media(max-width:500px){.zone-shell{grid-template-columns:1fr}}
+.zone-sb{background:var(--s1);border-right:1px solid var(--border);padding:1rem 0;overflow-y:auto}
+.zsb-label{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);padding:.4rem .875rem;margin-bottom:.2rem}
+.zsb-zone{display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;cursor:pointer;font-size:11px;color:var(--muted);border-left:2px solid transparent}
+.zsb-zone.za{border-left-color:var(--y);color:var(--y);background:var(--s2)}
+.zsb-zone.zc{color:var(--green)}
+.zsb-zone.zr{color:var(--red)}
+.zsb-name{font-family:var(--D);font-size:12px;letter-spacing:.02em;line-height:1}
+.zsb-ct{font-size:9px;margin-top:1px}
+.zsb-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;margin-left:auto}
+.zsb-zone.za .zsb-dot{background:var(--y)}
+.zsb-zone.zc .zsb-dot{background:var(--green)}
+.zsb-zone.zr .zsb-dot{background:var(--red)}
+.zone-main-content{padding:1rem 1.25rem;overflow-y:auto}
+
+/* ── REVIEW ── */
+.rev-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:1rem}
+.rs{background:var(--s2);padding:1rem;text-align:center}
+.rs-n{font-family:var(--D);font-size:28px;line-height:1;letter-spacing:.02em}
+.rs-n.r{color:var(--red)}.rs-n.a{color:var(--amber)}.rs-n.g{color:var(--green)}
+.rs-l{font-size:10px;color:var(--muted);margin-top:.2rem}
+.rev-item{display:flex;align-items:center;gap:.625rem;padding:.5rem .75rem;background:var(--s2);border:1px solid var(--border);border-radius:4px;margin-bottom:.4rem;font-size:11px;color:var(--muted)}
+.rev-item .cp-badge{margin:0}
+
+/* ── AI OVERLAY ── */
+.ai-over{
+  position:absolute;inset:0;background:rgba(5,5,6,.94);backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2rem;z-index:50;
+  opacity:0;transition:opacity .4s;pointer-events:none;
+}
+.ai-over.show{opacity:1}
+.ai-spin{width:44px;height:44px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--y);animation:spin 1s linear infinite;margin-bottom:1.25rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-title{font-family:var(--D);font-size:22px;letter-spacing:.04em;color:var(--y);margin-bottom:.4rem}
+.ai-sub{font-size:12px;color:var(--muted);line-height:1.55;max-width:280px}
+.ai-step{font-size:10px;color:var(--ghost);margin-top:.875rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── EMAIL SCENE ── */
+.email-chrome{background:#1a1a2e;border-radius:8px;overflow:hidden;border:1px solid #2a2a3e}
+.email-top{background:#111120;padding:.625rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #2a2a3e}
+.email-dot{width:8px;height:8px;border-radius:50%}
+.email-subject{font-size:11px;color:#9999bb;margin-left:.25rem}
+.email-body{padding:1rem;background:#0d0d1a}
+.email-from{font-size:10px;color:#6666aa;margin-bottom:.4rem}
+.email-subj{font-size:13px;font-weight:600;color:#eeeeff;margin-bottom:.875rem}
+.report-section{background:#111120;border:1px solid #2a2a3e;border-radius:6px;padding:.875rem;margin-bottom:.625rem}
+.rs-head{font-size:11px;font-weight:700;color:var(--y);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.rs-body{font-size:11px;color:#9999cc;line-height:1.6}
+.rs-item{display:flex;gap:.5rem;font-size:11px;color:#9999cc;margin-bottom:.25rem;align-items:flex-start}
+.rs-item::before{content:'•';color:var(--red);flex-shrink:0}
+.rs-item.g::before{color:var(--green)}
+.rs-item.a::before{color:var(--amber)}
+
+/* ── SUCCESS SCENE ── */
+.success-sc{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem}
+.ss-icon{font-size:44px;margin-bottom:1rem}
+.ss-t{font-family:var(--D);font-size:28px;letter-spacing:.04em;color:var(--y);margin-bottom:.4rem}
+.ss-b{font-size:12px;color:var(--muted);max-width:300px;line-height:1.6}
+.ss-email{font-family:monospace;font-size:13px;color:var(--green);margin-top:.625rem}
+
+/* Mobile zone sidebar hide */
+@media(max-width:500px){.zone-sb{display:none}}
+</style>
+</head>
+<body>
+<div class="demo-wrap" id="demo">
+
+  <!-- BROWSER CHROME -->
+  <div class="chrome">
+    <div class="chrome-dots">
+      <div class="cd cd1"></div>
+      <div class="cd cd2"></div>
+      <div class="cd cd3"></div>
+    </div>
+    <div class="chrome-url">
+      <span class="url-lock">🔒</span>
+      <span id="url-text">dustsafeai.com/scanner</span>
+    </div>
+  </div>
+
+  <!-- SCANNER TOPBAR -->
+  <div class="s-topbar">
+    <span class="s-logo">DUST<span>SAFE</span>AI</span>
+    <div class="s-save" id="save-ind">↺ Auto-save</div>
+    <div class="s-step" id="step-ind">Welcome</div>
+  </div>
+  <div class="s-prog"><div class="s-prog-fill" id="s-prog" style="width:0%"></div></div>
+
+  <!-- SCENES -->
+  <div class="scenes" id="scenes">
+
+    <!-- S0: WELCOME -->
+    <div class="scene active" id="sc-0">
+      <div class="scene-pad" style="max-width:520px;margin:0 auto;padding-top:1.5rem">
+        <div class="eye">DustSafeAI Scanner</div>
+        <div class="ttl">OSHA 2026<br><em>Readiness Scan</em></div>
+        <div class="sub">30 guided checkpoints across 5 zones. Takes 25–45 minutes. Auto-saves as you go.</div>
+        <div style="background:var(--s2);border:1px solid var(--bhi);border-radius:6px;padding:1.25rem;margin-bottom:.75rem">
+          <div style="font-family:var(--D);font-size:13px;letter-spacing:.04em;color:var(--text);margin-bottom:.625rem">HOW IT WORKS</div>
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            <div style="display:flex;gap:.625rem;font-size:11px;color:var(--muted)"><span style="color:var(--y);font-family:var(--D);font-size:11px;width:16px">1</span>Enter your facility and contact info</div>
+            <div style="display:flex;gap:.625rem;font-size:11px;color:var(--muted)"><span style="color:var(--y);font-family:var(--D);font-size:11px;width:16px">2</span>Upload your facility floor plan (NFPA 660 Ch. 7)</div>
+            <div style="display:flex;gap:.625rem;font-size:11px;color:var(--muted)"><span style="color:var(--y);font-family:var(--D);font-size:11px;width:16px">3</span>Walk each zone — photos, locations, status flags</div>
+            <div style="display:flex;gap:.625rem;font-size:11px;color:var(--muted)"><span style="color:var(--y);font-family:var(--D);font-size:11px;width:16px">4</span>AI generates your full report — in your inbox in minutes</div>
+          </div>
+        </div>
+        <button style="width:100%;background:var(--y);color:var(--ink);border:none;border-radius:5px;font-family:var(--D);font-size:16px;letter-spacing:.05em;padding:12px;cursor:pointer" id="begin-btn">BEGIN SCAN →</button>
+      </div>
+    </div>
+
+    <!-- S1: FACILITY -->
+    <div class="scene" id="sc-1">
+      <div class="scene-pad">
+        <div class="eye">Step 1 of 8 — Facility Information</div>
+        <div class="ttl">YOUR <em>FACILITY</em></div>
+        <div class="fg-2">
+          <div class="fg"><label>EHS Contact Name</label><input type="text" id="f-name-d" placeholder="First Last"></div>
+          <div class="fg"><label>Your Title</label><input type="text" id="f-title-d" placeholder="EHS Manager…"></div>
+        </div>
+        <div class="fg"><label>Facility / Plant Name</label><input type="text" id="f-fac-d" placeholder="e.g. Acme Corrugated — Chicago Plant"></div>
+        <div class="fg-2">
+          <div class="fg"><label>Work Email</label><input type="email" id="f-email-d" placeholder="you@company.com"></div>
+          <div class="fg"><label>Direct Phone</label><input type="text" id="f-phone-d" placeholder="(612) 555-0100"></div>
+        </div>
+        <div class="fg-2">
+          <div class="fg"><label>Industry</label>
+            <select id="f-ind-d"><option>Corrugated / Packaging</option></select>
+          </div>
+          <div class="fg"><label>State</label>
+            <select id="f-st-d"><option>Illinois</option></select>
+          </div>
+        </div>
+        <div class="fg"><label>Date of Last DHA</label><input type="text" id="f-dha-d" placeholder="e.g. March 2019"></div>
+      </div>
+    </div>
+
+    <!-- S2: SCHEMATIC -->
+    <div class="scene" id="sc-2">
+      <div class="scene-pad">
+        <div class="eye">Step 2 of 8 — Facility Schematic</div>
+        <div class="ttl">UPLOAD YOUR <em>FLOOR PLAN</em></div>
+        <div style="background:var(--bdim);border:1px solid var(--bborder);border-left:2px solid var(--blue);border-radius:4px;padding:.625rem .875rem;font-size:11px;color:var(--muted);margin-bottom:1rem;line-height:1.5">
+          <strong style="color:var(--blue)">NFPA 660 Ch. 7 requires:</strong> A DHA must map every process, room, and compartment where combustible dust is handled. Your floor plan anchors every finding to a verifiable location.
+        </div>
+        <div class="schema-drop" id="schema-drop-d">
+          <div class="sd-icon">🗺️</div>
+          <div class="sd-title">UPLOAD FACILITY LAYOUT</div>
+          <div class="sd-sub">Click to browse or drag & drop — PDF, PNG, JPG, DWG</div>
+        </div>
+        <div id="schema-confirmed-d" style="display:none;margin-top:.75rem">
+          <div class="schema-drop done">
+            <div class="schema-confirmed">
+              <div class="sc-icon">📄</div>
+              <div><div class="sc-name">Plant_Layout_Bldg2.pdf</div><div class="sc-size">2.4 MB — uploaded</div></div>
+              <div class="sc-check">✓</div>
+            </div>
+          </div>
+          <div style="margin-top:.625rem;background:var(--s3);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+            <div style="padding:.5rem .75rem;font-size:10px;color:var(--muted);display:flex;gap:.5rem;align-items:center"><span style="color:var(--green)">✓</span> Floor plan loaded — photos will be tagged to this layout</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3: ZONE WALK -->
+    <div class="scene" id="sc-3">
+      <div class="zone-shell">
+        <div class="zone-sb">
+          <div class="zsb-label">Zones</div>
+          <div class="zsb-zone zr" id="zsb-0">
+            <span>🌫️</span>
+            <div><div class="zsb-name">Dust</div><div class="zsb-ct">6/6 assessed</div></div>
+            <div class="zsb-dot"></div>
+          </div>
+          <div class="zsb-zone za" id="zsb-1">
+            <span>🧹</span>
+            <div><div class="zsb-name">Housekeeping</div><div class="zsb-ct">3/7 assessed</div></div>
+            <div class="zsb-dot"></div>
+          </div>
+          <div class="zsb-zone" id="zsb-2">
+            <span>📄</span>
+            <div><div class="zsb-name">Programs</div><div class="zsb-ct">0/6 assessed</div></div>
+            <div class="zsb-dot"></div>
+          </div>
+          <div class="zsb-zone" id="zsb-3">
+            <span>🦺</span>
+            <div><div class="zsb-name">Contractor</div><div class="zsb-ct">0/5 assessed</div></div>
+            <div class="zsb-dot"></div>
+          </div>
+          <div class="zsb-zone" id="zsb-4">
+            <span>⚡</span>
+            <div><div class="zsb-name">Ignition</div><div class="zsb-ct">0/6 assessed</div></div>
+            <div class="zsb-dot"></div>
+          </div>
+        </div>
+        <div class="zone-main-content">
+          <div class="eye">Zone 2 · NFPA 654 §8 · OSHA 2026</div>
+          <div class="ttl" style="font-size:20px">🧹 <em>HOUSEKEEPING</em></div>
+          <div class="sub">Review the written program and evidence it's being followed.</div>
+
+          <!-- CP: already good -->
+          <div class="cp good">
+            <div class="cp-hd">
+              <div class="cp-num">2.1</div>
+              <div class="cp-info">
+                <div class="cp-title">Written housekeeping program — exists and is current</div>
+                <div class="cp-ref">29 CFR 1910.141 · NFPA 660 Ch. 8</div>
+              </div>
+              <div class="cp-badge bg">GOOD</div>
+            </div>
+          </div>
+
+          <!-- CP: active - being filled -->
+          <div class="cp risk" id="active-cp">
+            <div class="cp-hd">
+              <div class="cp-num">2.2</div>
+              <div class="cp-info">
+                <div class="cp-title">Cleaning frequency log — current and accessible</div>
+                <div class="cp-ref">NFPA 654 §8.3 · OSHA NEP 2026</div>
+              </div>
+              <div class="cp-badge br" id="active-badge">HIGH RISK</div>
+            </div>
+            <div class="cp-body">
+              <div style="background:var(--s3);border-left:2px solid var(--bhi);border-radius:3px;padding:.5rem .75rem;font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:.625rem">
+                A log showing "cleaned daily" with <strong style="color:var(--text)">1/16" accumulation</strong> creates a discrepancy that can escalate a serious citation to willful.
+              </div>
+              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:5px">STATUS</div>
+              <div class="status-row">
+                <div class="sb">✓ Good</div>
+                <div class="sb">⚠ Review</div>
+                <div class="sb active-r" id="risk-btn">✗ High Risk</div>
+              </div>
+              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:5px">LOCATION ON FLOOR PLAN</div>
+              <input class="loc-field" id="loc-field-d" placeholder="" readonly>
+              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:5px">PHOTOS / DOCUMENTS</div>
+              <div class="photo-thumb-row" id="photo-row-d" style="display:none">
+                <div class="ph-th">📄</div>
+                <div style="font-size:10px;color:var(--muted);display:flex;align-items:center">Housekeeping_Log_2024.pdf</div>
+              </div>
+              <div class="photo-zone">📷 Upload cleaning log — tap to add</div>
+            </div>
+          </div>
+
+          <!-- CP: not assessed -->
+          <div class="cp">
+            <div class="cp-hd">
+              <div class="cp-num">2.3</div>
+              <div class="cp-info">
+                <div class="cp-title">HEPA vacuum documented as primary cleaning method</div>
+                <div class="cp-ref">NFPA 660 §8.4 · OSHA NEP Protocol</div>
+              </div>
+              <div class="cp-badge bn">NOT ASSESSED</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S4: REVIEW -->
+    <div class="scene" id="sc-4">
+      <div class="scene-pad" style="max-width:700px">
+        <div class="eye">Step 8 of 8 — Review & Submit</div>
+        <div class="ttl">YOUR <em>FINDINGS</em></div>
+        <div class="rev-summary">
+          <div class="rs"><div class="rs-n r">3</div><div class="rs-l">High Risk</div></div>
+          <div class="rs"><div class="rs-n a">4</div><div class="rs-l">Needs Review</div></div>
+          <div class="rs"><div class="rs-n g">23</div><div class="rs-l">Good</div></div>
+        </div>
+        <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ghost);margin-bottom:.625rem">HIGH RISK — PRIORITY ITEMS</div>
+        <div class="rev-item"><div class="cp-badge br">HIGH RISK</div><span>[Housekeeping] Cleaning log absent 6+ months — no shift records on file</span></div>
+        <div class="rev-item"><div class="cp-badge br">HIGH RISK</div><span>[Dust Accum.] Overhead beam Bay 3 — est. 1/16" accumulation, no mitigation log</span></div>
+        <div class="rev-item"><div class="cp-badge br">HIGH RISK</div><span>[Written Programs] DHA last completed March 2019 — 5-year limit exceeded</span></div>
+        <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ghost);margin:.75rem 0 .5rem">NEEDS REVIEW</div>
+        <div class="rev-item"><div class="cp-badge ba">REVIEW</div><span>[Contractor] Active vendor on-site — JSA not on file for current work</span></div>
+        <div class="rev-item"><div class="cp-badge ba">REVIEW</div><span>[Programs] SDS library not confirmed against GHS Rev. 7 standard</span></div>
+        <button style="width:100%;background:var(--y);color:var(--ink);border:none;border-radius:5px;font-family:var(--D);font-size:15px;letter-spacing:.05em;padding:13px;cursor:pointer;margin-top:1rem">SUBMIT SCAN — GET MY 48-HOUR REPORT →</button>
+      </div>
+    </div>
+
+    <!-- S5: AI GENERATING -->
+    <div class="scene" id="sc-5">
+      <div class="scene-pad" style="height:100%">
+        <!-- report screen blurred behind -->
+        <div style="opacity:.15;pointer-events:none">
+          <div class="eye">Step 8 of 8</div>
+          <div class="ttl">YOUR <em>FINDINGS</em></div>
+          <div class="rev-summary">
+            <div class="rs"><div class="rs-n r">3</div><div class="rs-l">High Risk</div></div>
+            <div class="rs"><div class="rs-n a">4</div><div class="rs-l">Needs Review</div></div>
+            <div class="rs"><div class="rs-n g">23</div><div class="rs-l">Good</div></div>
+          </div>
+        </div>
+        <div class="ai-over show" id="ai-over">
+          <div class="ai-spin"></div>
+          <div class="ai-title">GENERATING YOUR REPORT</div>
+          <div class="ai-sub">Claude AI is analyzing 30 checkpoints against OSHA NEP 2026 and NFPA 660 standards.</div>
+          <div class="ai-step" id="ai-step-text">Analyzing your 30 checkpoints…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S6: EMAIL REPORT -->
+    <div class="scene" id="sc-6">
+      <div class="scene-pad">
+        <div class="eye">Report delivered to your inbox</div>
+        <div class="ttl" style="font-size:18px;margin-bottom:.875rem">📧 <em>IN YOUR INBOX</em></div>
+        <div class="email-chrome">
+          <div class="email-top">
+            <div class="email-dot" style="background:#FF5F57"></div>
+            <div class="email-dot" style="background:#FFBD2E"></div>
+            <div class="email-dot" style="background:#28C840"></div>
+            <div class="email-subject">Gmail — Jane Mitchell &lt;j.mitchell@acmecorrugated.com&gt;</div>
+          </div>
+          <div class="email-body">
+            <div class="email-from">From: DustSafeAI &lt;reports@dustsafeai.com&gt; · just now</div>
+            <div class="email-subj">Your DustSafeAI OSHA 2026 Readiness Report — Acme Corrugated Chicago Plant</div>
+            <div class="report-section">
+              <div class="rs-head">⚠ IMMEDIATE ACTION REQUIRED</div>
+              <div class="rs-body">This facility has <strong style="color:var(--red)">3 High Risk items</strong> requiring immediate attention before any OSHA inspection. DHA renewal is overdue by 2+ years — this is the highest-priority gap.</div>
+            </div>
+            <div class="report-section">
+              <div class="rs-head">🔴 CRITICAL FINDINGS</div>
+              <div class="rs-item">Cleaning log absent 6+ months (Bay 2 maintenance area) — NFPA 654 §8.3 · Est. citation: $15,625</div>
+              <div class="rs-item">Overhead beam accumulation Bay 3 ~1/16" — 29 CFR 1910.141 · Exceeds 1/32" threshold</div>
+              <div class="rs-item">DHA last completed March 2019 — NFPA 660 Ch. 7 requires revalidation by 2024</div>
+            </div>
+            <div class="report-section">
+              <div class="rs-head">📊 FINE EXPOSURE ESTIMATE</div>
+              <div class="rs-body">3 serious citations × $15,625 = <strong style="color:var(--red)">$46,875</strong> estimated exposure. If DHA gap classified as willful: up to <strong style="color:var(--red)">$156,259.</strong></div>
+            </div>
+            <div class="report-section">
+              <div class="rs-head">✅ ACTION TABLE (30/60/90 DAYS)</div>
+              <div class="rs-item r">IMMEDIATE: Restart housekeeping log — assign shift supervisor sign-off</div>
+              <div class="rs-item r">IMMEDIATE: Initiate DHA renewal — scope attached, qualified facilitator list included</div>
+              <div class="rs-item a">30 DAYS: Obtain JSA from active contractor, file with service log</div>
+              <div class="rs-item a">60 DAYS: Complete GHS Rev. 7 SDS review</div>
+              <div class="rs-item g">GOOD: Explosion venting documented, Class II electrical current, hot work permits active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S7: SUCCESS -->
+    <div class="scene" id="sc-7">
+      <div class="success-sc">
+        <div class="ss-icon">⚡</div>
+        <div class="ss-t">SCAN COMPLETE.</div>
+        <div class="ss-b">Your AI report is in your inbox. Free. No sales call. Upgrade to Protect, Shield, or Command to close the gaps it found.</div>
+        <div class="ss-email">dustsafeai.com/scanner</div>
+        <div style="margin-top:1.5rem;display:flex;gap:.625rem;justify-content:center;flex-wrap:wrap">
+          <div style="background:var(--gdim);border:1px solid var(--gborder);border-radius:20px;padding:3px 12px;font-size:10px;color:var(--green)">✓ Zero cost</div>
+          <div style="background:var(--yg);border:1px solid var(--yb);border-radius:20px;padding:3px 12px;font-size:10px;color:var(--y)">✓ AI-generated in minutes</div>
+          <div style="background:var(--bdim);border:1px solid var(--bborder);border-radius:20px;padding:3px 12px;font-size:10px;color:var(--blue)">✓ NFPA 660 aligned</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE LABEL OVERLAY -->
+    <div class="scene-label" id="scene-label">Opening DustSafeAI Scanner…</div>
+
+  </div><!-- /scenes -->
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="ctrl-play" id="play-btn" aria-label="Play/Pause">
+      <svg id="play-icon" width="9" height="12" viewBox="0 0 9 12" fill="none"><path d="M1 1l7 5-7 5V1z" fill="#050506"/></svg>
+    </button>
+    <div class="ctrl-bar" id="ctrl-bar" onclick="scrub(event)">
+      <div class="ctrl-fill" id="ctrl-fill" style="width:0%"></div>
+      <div class="ctrl-thumb" id="ctrl-thumb" style="left:0%"></div>
+    </div>
+    <div class="ctrl-time" id="ctrl-time">0:00 / 0:32</div>
+    <div class="ctrl-scenes" id="ctrl-dots"></div>
+  </div>
+
+</div><!-- /demo-wrap -->
+
+<script>
+// ── SCENE CONFIG ──
+const SCENES = [
+  { id:'sc-0', label:'Opening DustSafeAI Scanner…', step:'Welcome', prog:0, dur:3000 },
+  { id:'sc-1', label:'Entering facility info…', step:'Facility Info', prog:14, dur:6000 },
+  { id:'sc-2', label:'Uploading facility floor plan…', step:'Floor Plan', prog:26, dur:4000 },
+  { id:'sc-3', label:'Walking Zone 2 — Housekeeping…', step:'Zone Walk', prog:50, dur:6000 },
+  { id:'sc-4', label:'Reviewing all findings…', step:'Review', prog:80, dur:4000 },
+  { id:'sc-5', label:'AI generating your report…', step:'Generating…', prog:90, dur:4000 },
+  { id:'sc-6', label:'Report delivered to inbox ✓', step:'Report In Inbox', prog:97, dur:6000 },
+  { id:'sc-7', label:'Scan complete!', step:'Complete', prog:100, dur:4000 },
+];
+const TOTAL_DUR = SCENES.reduce((s,sc)=>s+sc.dur,0);
+
+let current = 0;
+let playing = true;
+let elapsed = 0;
+let sceneElapsed = 0;
+let lastTick = null;
+let rafId = null;
+let typing1done = false, typing2done = false, schemaShown = false;
+let locTyped = '', photoShown = false;
+let aiStepCycle = 0;
+
+// Typewriter targets
+const TYPEDATA = {
+  'f-name-d':   { text:'Jane Mitchell', speed:60 },
+  'f-title-d':  { text:'EHS Manager', speed:70 },
+  'f-fac-d':    { text:'Acme Corrugated — Chicago Plant', speed:45 },
+  'f-email-d':  { text:'j.mitchell@acmecorrugated.com', speed:40 },
+  'f-phone-d':  { text:'(312) 555-0182', speed:65 },
+  'f-dha-d':    { text:'March 2019', speed:70 },
+};
+let typingQueues = {};
+let typingTimers = {};
+
+function typeField(id, text, speed, onDone) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('active');
+  let i = 0;
+  function next() {
+    if (i <= text.length) {
+      el.value = text.slice(0, i++);
+      typingTimers[id] = setTimeout(next, speed + Math.random()*30 - 15);
+    } else {
+      el.classList.remove('active');
+      if (onDone) onDone();
+    }
+  }
+  next();
+}
+
+function clearAllTyping() {
+  Object.values(typingTimers).forEach(t => clearTimeout(t));
+  typingTimers = {};
+}
+
+// ── SCENE ENTER ACTIONS ──
+function onSceneEnter(idx) {
+  clearAllTyping();
+  sceneElapsed = 0;
+
+  if (idx === 1) {
+    // Facility: type fields sequentially
+    typing1done = false;
+    const fields = ['f-name-d','f-fac-d','f-email-d','f-dha-d'];
+    let fi = 0;
+    function nextField() {
+      if (fi >= fields.length) { typing1done = true; return; }
+      const id = fields[fi++];
+      typeField(id, TYPEDATA[id].text, TYPEDATA[id].speed, () => setTimeout(nextField, 200));
+    }
+    setTimeout(nextField, 400);
+  }
+
+  if (idx === 2) {
+    // Schema: animate drag then confirm
+    schemaShown = false;
+    const drop = document.getElementById('schema-drop-d');
+    const conf = document.getElementById('schema-confirmed-d');
+    if (drop) { drop.style.display='block'; drop.classList.remove('drag'); }
+    if (conf) conf.style.display='none';
+    setTimeout(() => {
+      if (drop) drop.classList.add('drag');
+      setTimeout(() => {
+        if (drop) { drop.style.display='none'; }
+        if (conf) { conf.style.display='block'; schemaShown=true; }
+      }, 900);
+    }, 800);
+  }
+
+  if (idx === 3) {
+    // Zone walk: type location field, show photo
+    locTyped = ''; photoShown = false;
+    const loc = document.getElementById('loc-field-d');
+    const row = document.getElementById('photo-row-d');
+    if (loc) loc.value = '';
+    if (row) row.style.display = 'none';
+    const LOC = 'Maintenance office — filing cabinet';
+    let li = 0;
+    setTimeout(() => {
+      function nextChar() {
+        if (li <= LOC.length) {
+          if (loc) loc.value = LOC.slice(0, li++);
+          setTimeout(nextChar, 55 + Math.random()*20);
+        } else {
+          setTimeout(() => { if (row) row.style.display='flex'; }, 600);
+        }
+      }
+      nextChar();
+    }, 1800);
+  }
+
+  if (idx === 5) {
+    // AI steps
+    const steps = [
+      'Analyzing your 30 checkpoints…',
+      'Cross-referencing NFPA 660 standards…',
+      'Calculating fine exposure estimate…',
+      'Writing executive summary…',
+      'Sending report to j.mitchell@acmecorrugated.com…',
+    ];
+    let si = 0;
+    const el = document.getElementById('ai-step-text');
+    function nextStep() {
+      if (!playing) return;
+      if (el && si < steps.length) {
+        el.textContent = steps[si++];
+        setTimeout(nextStep, 700);
+      }
+    }
+    setTimeout(nextStep, 300);
+  }
+}
+
+// ── SCENE SHOW/HIDE ──
+function showScene(idx) {
+  SCENES.forEach((sc, i) => {
+    const el = document.getElementById(sc.id);
+    if (el) el.classList.toggle('active', i === idx);
+  });
+  const s = SCENES[idx];
+  const lbl = document.getElementById('scene-label');
+  if (lbl) lbl.textContent = s.label;
+  const si = document.getElementById('step-ind');
+  if (si) si.textContent = s.step;
+  const prog = document.getElementById('s-prog');
+  if (prog) prog.style.width = s.prog + '%';
+  const save = document.getElementById('save-ind');
+  if (save) { save.textContent = idx > 0 ? '✓ Saved' : '↺ Auto-save'; save.classList.toggle('saved', idx > 0); }
+  updateDots();
+  onSceneEnter(idx);
+}
+
+function updateDots() {
+  const container = document.getElementById('ctrl-dots');
+  if (!container) return;
+  container.innerHTML = SCENES.map((_, i) =>
+    `<div class="cs-dot ${i===current?'active':i<current?'done':''}" onclick="jumpTo(${i})"></div>`
+  ).join('');
+}
+
+function jumpTo(idx) {
+  current = idx;
+  elapsed = SCENES.slice(0,idx).reduce((s,sc)=>s+sc.dur,0);
+  sceneElapsed = 0;
+  showScene(idx);
+  updateBar();
+}
+
+function scrub(e) {
+  const bar = document.getElementById('ctrl-bar');
+  if (!bar) return;
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const target = pct * TOTAL_DUR;
+  let acc = 0;
+  for (let i = 0; i < SCENES.length; i++) {
+    if (acc + SCENES[i].dur >= target) {
+      current = i;
+      elapsed = target;
+      sceneElapsed = target - acc;
+      showScene(i);
+      updateBar();
+      return;
+    }
+    acc += SCENES[i].dur;
+  }
+}
+
+function updateBar() {
+  const pct = (elapsed / TOTAL_DUR * 100).toFixed(1);
+  const fill = document.getElementById('ctrl-fill');
+  const thumb = document.getElementById('ctrl-thumb');
+  const time = document.getElementById('ctrl-time');
+  if (fill) fill.style.width = pct + '%';
+  if (thumb) thumb.style.left = pct + '%';
+  if (time) {
+    const sec = Math.floor(elapsed/1000);
+    const tot = Math.floor(TOTAL_DUR/1000);
+    time.textContent = `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')} / ${Math.floor(tot/60)}:${String(tot%60).padStart(2,'0')}`;
+  }
+}
+
+// ── TICK ──
+function tick(ts) {
+  if (!playing) { rafId = requestAnimationFrame(tick); return; }
+  if (lastTick === null) lastTick = ts;
+  const dt = ts - lastTick;
+  lastTick = ts;
+
+  elapsed += dt;
+  sceneElapsed += dt;
+  if (elapsed > TOTAL_DUR) { elapsed = 0; sceneElapsed = 0; current = 0; showScene(0); }
+
+  // advance scene
+  if (sceneElapsed >= SCENES[current].dur) {
+    const next = (current + 1) % SCENES.length;
+    sceneElapsed = 0;
+    current = next;
+    showScene(next);
+  }
+
+  updateBar();
+  rafId = requestAnimationFrame(tick);
+}
+
+// ── PLAY / PAUSE ──
+const playBtn = document.getElementById('play-btn');
+const playIc = document.getElementById('play-icon');
+function togglePlay() {
+  playing = !playing;
+  lastTick = null;
+  playIc.innerHTML = playing
+    ? '<path d="M1 1l7 5-7 5V1z" fill="#050506"/>'
+    : '<path d="M2 1h3v10H2V1zm5 0h3v10H7V1z" fill="#050506"/>';
+}
+if (playBtn) playBtn.addEventListener('click', togglePlay);
+
+// ── INIT ──
+showScene(0);
+updateBar();
+rafId = requestAnimationFrame(tick);
+</script>
+</body>
+</html>
