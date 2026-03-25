@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndustrialSafeAI – Your AI-Powered EHS Department for Corrugated Plants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Barlow+Condensed:wght@500;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--black:#080809;--dark:#0e0f11;--card:#141618;--card2:#1a1c20;--border:#252830;--border2:#2e3138;--yellow:#f0b429;--yellow2:#ffd060;--orange:#e05c1a;--red:#c93535;--green:#2e9e5b;--white:#edeae3;--muted:#7a7d87;--text:#b8b4aa;--serif:'DM Serif Display',Georgia,serif;--cond:'Barlow Condensed',sans-serif;--sans:'Barlow',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5}
+
+/* ALERT */
+#alert-bar{background:#1a0e00;border-bottom:1px solid rgba(224,92,26,.35);position:sticky;top:0;z-index:100}
+.alert-inner{max-width:1200px;margin:0 auto;padding:9px 5%;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.alert-pill{background:var(--orange);color:#fff;font-family:var(--cond);font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:2px;white-space:nowrap}
+.alert-text{font-family:var(--cond);font-size:.95rem;font-weight:700;color:var(--white);letter-spacing:.02em}
+.alert-text span{color:var(--yellow)}
+#alert-timer{font-family:var(--cond);font-size:.85rem;font-weight:700;color:var(--orange);border:1px solid rgba(224,92,26,.4);padding:2px 10px;border-radius:2px;letter-spacing:.04em}
+.alert-cta{font-family:var(--cond);font-size:.8rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:var(--yellow);color:#000;padding:4px 14px;border-radius:2px;text-decoration:none;white-space:nowrap}
+
+/* NAV */
+nav{background:var(--dark);border-bottom:1px solid var(--border);padding:0 5%}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{font-family:var(--cond);font-size:1.35rem;font-weight:900;color:var(--white);text-decoration:none;letter-spacing:.02em}
+.logo b{color:var(--yellow)}
+.nav-right{display:flex;align-items:center;gap:18px}
+.nav-right a{font-size:.88rem;color:var(--muted);text-decoration:none;transition:color .15s}
+.nav-right a:hover{color:var(--yellow)}
+.nav-phone{font-family:var(--cond);font-size:1rem;font-weight:700;color:var(--white)!important;letter-spacing:.04em}
+.btn-cta{font-family:var(--cond);font-size:.9rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--yellow);color:#000;border:none;padding:9px 20px;border-radius:3px;cursor:pointer;text-decoration:none;transition:background .15s}
+.btn-cta:hover{background:var(--yellow2)}
+
+/* HERO */
+.hero-wrap{max-width:1200px;margin:0 auto;padding:72px 5% 64px;display:grid;grid-template-columns:1fr 480px;gap:64px;align-items:start}
+.hero-eyebrow{font-family:var(--cond);font-size:.78rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--yellow);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-eyebrow::before{content:'';width:28px;height:2px;background:var(--yellow);flex-shrink:0}
+h1{font-family:var(--serif);font-size:clamp(2.8rem,5vw,4.4rem);line-height:1.06;color:var(--white);margin-bottom:10px;letter-spacing:-.01em}
+h1 em{color:var(--yellow);font-style:italic}
+.hero-price-line{font-family:var(--cond);font-size:1.05rem;font-weight:700;color:var(--muted);letter-spacing:.03em;margin-bottom:24px}
+.hero-price-line strong{color:var(--white)}
+.hero-sub{font-size:1.05rem;line-height:1.7;color:var(--text);max-width:500px;margin-bottom:32px}
+.hero-proof{display:flex;flex-direction:column;gap:9px;margin-bottom:36px}
+.proof-row{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--muted)}
+.proof-row .dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0}
+.proof-row strong{color:var(--white)}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{font-family:var(--cond);font-size:1.05rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--yellow);color:#000;border:none;padding:14px 28px;border-radius:3px;cursor:pointer;text-decoration:none;display:inline-block;transition:background .15s,transform .1s}
+.btn-primary:hover{background:var(--yellow2);transform:translateY(-1px)}
+.btn-ghost{font-family:var(--cond);font-size:.95rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:transparent;color:var(--white);border:1px solid var(--border2);padding:14px 22px;border-radius:3px;cursor:pointer;text-decoration:none;display:inline-block;transition:border-color .15s,color .15s}
+.btn-ghost:hover{border-color:var(--yellow);color:var(--yellow)}
+
+/* QUIZ */
+.quiz-wrap{background:var(--card);border:1px solid var(--border2);border-top:3px solid var(--yellow);border-radius:4px;overflow:hidden}
+.quiz-top{background:rgba(240,180,41,.06);padding:20px 24px;border-bottom:1px solid var(--border)}
+.quiz-top h3{font-family:var(--cond);font-size:1.05rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--white);margin-bottom:3px}
+.quiz-top p{font-size:.83rem;color:var(--muted)}
+.quiz-body{padding:22px 24px}
+.qprog{display:flex;gap:5px;margin-bottom:18px}
+.qp{flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s}
+.qp.done{background:var(--yellow)}.qp.active{background:var(--orange)}
+.quiz-q-text{font-family:var(--cond);font-size:1rem;font-weight:700;color:var(--white);margin-bottom:14px;line-height:1.35}
+.quiz-q-text .qn{color:var(--yellow);margin-right:5px}
+.q-opts{display:flex;flex-direction:column;gap:7px}
+.q-opt{display:flex;align-items:center;gap:10px;background:var(--dark);border:1px solid var(--border);border-radius:3px;padding:11px 14px;cursor:pointer;font-size:.9rem;color:var(--text);text-align:left;transition:border-color .15s,background .15s}
+.q-opt:hover{border-color:var(--yellow);background:rgba(240,180,41,.05)}
+.q-opt.sel{border-color:var(--yellow);background:rgba(240,180,41,.09);color:var(--white)}
+.q-opt .radio{width:15px;height:15px;border:2px solid var(--border2);border-radius:50%;flex-shrink:0;transition:all .15s}
+.q-opt.sel .radio{border-color:var(--yellow);background:var(--yellow)}
+.q-nav{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+.q-back{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px 0;font-family:var(--sans)}
+.q-back:hover{color:var(--white)}
+.q-next{font-family:var(--cond);font-size:.9rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:var(--yellow);color:#000;border:none;padding:9px 22px;border-radius:3px;cursor:pointer;transition:background .15s}
+.q-next:disabled{background:var(--border);color:var(--muted);cursor:default}
+.q-next:not(:disabled):hover{background:var(--yellow2)}
+.q-result{padding:24px}
+.risk-badge{display:inline-block;font-family:var(--cond);font-size:.85rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:2px;margin-bottom:10px}
+.rh .risk-badge{background:rgba(201,53,53,.15);color:var(--red);border:1px solid rgba(201,53,53,.3)}
+.rm .risk-badge{background:rgba(224,92,26,.15);color:var(--orange);border:1px solid rgba(224,92,26,.3)}
+.rl .risk-badge{background:rgba(46,158,91,.12);color:var(--green);border:1px solid rgba(46,158,91,.25)}
+.risk-title{font-family:var(--cond);font-size:1.3rem;font-weight:800;color:var(--white);margin-bottom:8px;letter-spacing:.02em}
+.risk-meter-wrap{height:6px;background:var(--border);border-radius:3px;margin:10px 0 16px;overflow:hidden}
+.risk-fill{height:100%;border-radius:3px;transition:width .8s ease;width:0%}
+.rh .risk-fill{background:var(--red)}.rm .risk-fill{background:var(--orange)}.rl .risk-fill{background:var(--green)}
+.risk-items{background:rgba(240,180,41,.05);border:1px solid rgba(240,180,41,.15);border-radius:3px;padding:14px;margin-bottom:16px}
+.risk-items p{font-size:.83rem;color:var(--muted);margin-bottom:6px;font-weight:500}
+.risk-items ul{padding-left:16px;font-size:.85rem;color:var(--text);line-height:1.6}
+.risk-items li{margin-bottom:3px}
+
+/* REPLACE ROW */
+.replace-row{background:var(--dark);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.replace-inner{max-width:1200px;margin:0 auto;padding:0 5%;display:grid;grid-template-columns:repeat(3,1fr)}
+.replace-item{padding:28px 24px;border-right:1px solid var(--border);text-align:center}
+.replace-item:last-child{border-right:none}
+.replace-vs{font-family:var(--cond);font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.replace-cost{font-family:var(--cond);font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px}
+.cost-bad{color:var(--red)}.cost-good{color:var(--green)}
+.replace-label{font-size:.82rem;color:var(--muted);line-height:1.4}
+
+/* SECTIONS */
+section{padding:80px 5%}
+.s-inner{max-width:1200px;margin:0 auto}
+.s-tag{font-family:var(--cond);font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--yellow);margin-bottom:12px}
+h2{font-family:var(--serif);font-size:clamp(2rem,3.5vw,3rem);line-height:1.1;color:var(--white);margin-bottom:16px}
+h2 em{color:var(--yellow);font-style:italic}
+.s-lead{font-size:1rem;color:var(--muted);max-width:580px;margin-bottom:52px;line-height:1.7}
+
+/* PRODUCT */
+#product{background:var(--dark);border-top:1px solid var(--border)}
+.product-grid{display:grid;grid-template-columns:340px 1fr;gap:0;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.product-sidebar{background:rgba(240,180,41,.04);border-right:1px solid var(--border);padding:32px 28px}
+.product-sidebar h3{font-family:var(--cond);font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--white);margin-bottom:6px}
+.price-big{font-family:var(--cond);font-size:2.8rem;font-weight:900;color:var(--yellow);line-height:1;margin-bottom:4px;letter-spacing:-.02em}
+.price-sub{font-size:.82rem;color:var(--muted);margin-bottom:20px}
+.sidebar-desc{font-size:.9rem;color:var(--text);line-height:1.65;margin-bottom:24px}
+.what-tag{font-family:var(--cond);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:2px;display:inline-block;margin-bottom:14px}
+.tag-auto{background:rgba(240,180,41,.12);color:var(--yellow);border:1px solid rgba(240,180,41,.25)}
+.tag-yours{background:rgba(46,158,91,.1);color:var(--green);border:1px solid rgba(46,158,91,.25)}
+.time-math{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px;font-size:.85rem;line-height:1.6;color:var(--muted)}
+.time-math strong{color:var(--white)}
+.product-main{padding:32px 28px}
+.auto-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.auto-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:18px}
+.auto-card .ac-icon{font-size:1.3rem;margin-bottom:8px}
+.auto-card h4{font-family:var(--cond);font-size:.95rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--white);margin-bottom:6px}
+.auto-card p{font-size:.84rem;color:var(--muted);line-height:1.55}
+.yours-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.yours-section h4{font-family:var(--cond);font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px}
+.yours-list{display:flex;gap:10px;flex-wrap:wrap}
+.yours-item{background:rgba(46,158,91,.07);border:1px solid rgba(46,158,91,.2);border-radius:3px;padding:8px 14px;font-size:.85rem;color:var(--text);display:flex;align-items:center;gap:6px}
+.yours-item::before{content:'→';color:var(--green);font-weight:700}
+
+/* CALC */
+#calc{border-top:1px solid var(--border)}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.calc-card{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--orange);border-radius:4px;padding:32px}
+.calc-card h3{font-family:var(--cond);font-size:1.1rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--white);margin-bottom:22px}
+.cf{margin-bottom:16px}
+.cf label{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.cf select,.cf input{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:3px;padding:10px 14px;color:var(--white);font-family:var(--sans);font-size:.92rem;appearance:none}
+.cf select:focus,.cf input:focus{outline:none;border-color:var(--yellow)}
+.calc-btn{width:100%;margin-top:20px;font-family:var(--cond);font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--yellow);color:#000;border:none;padding:13px;border-radius:3px;cursor:pointer;transition:background .15s}
+.calc-btn:hover{background:var(--yellow2)}
+.calc-out{display:none;margin-top:20px}
+.out-section{padding:16px;border-radius:3px;margin-bottom:10px}
+.out-danger{background:rgba(201,53,53,.08);border:1px solid rgba(201,53,53,.2)}
+.out-safe{background:rgba(46,158,91,.07);border:1px solid rgba(46,158,91,.18)}
+.out-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.out-big{font-family:var(--cond);font-size:2.2rem;font-weight:900;line-height:1;letter-spacing:-.02em}
+.out-danger .out-big{color:var(--red)}.out-safe .out-big{color:var(--green)}
+.out-sub{font-size:.8rem;color:var(--muted);margin-top:4px;line-height:1.5}
+.out-rows{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.out-row{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.out-row .val{font-family:var(--cond);font-weight:700;font-size:.95rem;color:var(--green)}
+.out-total{font-family:var(--cond);font-size:1.1rem;font-weight:800;color:var(--green);display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(46,158,91,.2)}
+.context-card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:28px;margin-bottom:20px}
+.context-card h4{font-family:var(--cond);font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--white);margin-bottom:14px}
+.context-card p{font-size:.88rem;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.context-card p:last-child{margin-bottom:0}
+.context-card strong{color:var(--white)}
+.quote-card{background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.15);border-radius:4px;padding:24px}
+.quote-card p{font-size:.92rem;color:var(--text);line-height:1.7;font-style:italic;margin-bottom:10px}
+.quote-card cite{font-size:.8rem;color:var(--muted);font-style:normal}
+
+/* PRICING */
+#pricing{background:var(--dark);border-top:1px solid var(--border)}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.p-card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:28px 24px;position:relative;transition:border-color .2s}
+.p-card.p-featured{border-color:var(--yellow);background:rgba(240,180,41,.03)}
+.p-card.p-featured::before{content:'BEST VALUE';position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-family:var(--cond);font-size:.7rem;font-weight:800;letter-spacing:.1em;background:var(--yellow);color:#000;padding:2px 14px;border-radius:20px;white-space:nowrap}
+.p-tier{font-family:var(--cond);font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.p-name{font-family:var(--cond);font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.02em;color:var(--white);margin-bottom:14px}
+.p-price .amount{font-family:var(--cond);font-size:2.4rem;font-weight:900;letter-spacing:-.02em;color:var(--yellow)}
+.p-price .freq{font-size:.82rem;color:var(--muted);margin-left:3px}
+.p-divider{height:1px;background:var(--border);margin:18px 0}
+.p-features{list-style:none;display:flex;flex-direction:column;gap:9px}
+.p-features li{display:flex;gap:8px;font-size:.87rem;color:var(--text);line-height:1.45}
+.p-features li::before{content:'✓';color:var(--yellow);font-weight:700;flex-shrink:0}
+.p-features li.dim{color:var(--muted)}
+.p-features li.dim::before{content:'—';color:var(--border2)}
+.btn-p{width:100%;margin-top:22px;font-family:var(--cond);font-size:.9rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:3px;padding:12px;cursor:pointer;text-decoration:none;display:block;text-align:center;transition:all .15s}
+.btn-p-solid{background:var(--yellow);border:1px solid var(--yellow);color:#000}
+.btn-p-solid:hover{background:var(--yellow2)}
+.btn-p-outline{background:transparent;border:1px solid var(--border2);color:var(--white)}
+.btn-p-outline:hover{border-color:var(--yellow);color:var(--yellow)}
+.trust-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+.trust-cell{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:18px;text-align:center}
+.trust-cell .tn{font-family:var(--cond);font-size:1.5rem;font-weight:900;color:var(--white);margin-bottom:3px}
+.trust-cell .tl{font-size:.78rem;color:var(--muted);line-height:1.35}
+
+/* FAQ */
+#faq{border-top:1px solid var(--border)}
+.faq-wrap{max-width:760px}
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-q{width:100%;text-align:left;background:none;border:none;padding:18px 0;font-family:var(--cond);font-size:1.05rem;font-weight:700;color:var(--white);cursor:pointer;display:flex;justify-content:space-between;align-items:center;letter-spacing:.02em;transition:color .15s}
+.faq-q:hover{color:var(--yellow)}
+.faq-q .ficon{color:var(--muted);font-size:1.2rem;transition:transform .25s,color .15s;flex-shrink:0}
+.faq-q.open .ficon{transform:rotate(45deg);color:var(--yellow)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:.9rem;color:var(--muted);line-height:1.7}
+.faq-a.open{max-height:400px;padding-bottom:18px}
+
+/* BOOK */
+#book{background:linear-gradient(160deg,#100c00 0%,#0e0f11 60%,#080809 100%);border-top:1px solid var(--border);padding:80px 5%}
+.book-inner{max-width:640px;margin:0 auto;text-align:center}
+.book-inner h2{margin-bottom:10px}
+.book-sub{font-size:1rem;color:var(--muted);margin:0 auto 40px;max-width:480px;line-height:1.65}
+.book-form{text-align:left}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ff label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
+.ff input,.ff select,.ff textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:11px 14px;color:var(--white);font-family:var(--sans);font-size:.92rem;transition:border-color .15s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{outline:none;border-color:var(--yellow)}
+.ff textarea{height:78px;resize:vertical}
+.fc{grid-column:1/-1}
+.submit-btn{width:100%;margin-top:10px;font-family:var(--cond);font-size:1.1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--yellow);color:#000;border:none;padding:15px;border-radius:3px;cursor:pointer;transition:background .15s,transform .1s}
+.submit-btn:hover{background:var(--yellow2);transform:translateY(-1px)}
+.form-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:10px}
+.form-note a{color:var(--yellow)}
+
+/* FOOTER */
+footer{background:var(--dark);border-top:1px solid var(--border);padding:28px 5%}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-logo{font-family:var(--cond);font-size:1.05rem;font-weight:800;color:var(--white);text-decoration:none}
+.footer-logo b{color:var(--yellow)}
+footer p{font-size:.8rem;color:var(--muted)}
+.footer-links{display:flex;gap:18px}
+.footer-links a{font-size:.82rem;color:var(--muted);text-decoration:none}
+.footer-links a:hover{color:var(--yellow)}
+
+/* MOBILE */
+@media(max-width:900px){
+  .hero-wrap{grid-template-columns:1fr;gap:40px}
+  .replace-inner{grid-template-columns:1fr}
+  .replace-item{border-right:none;border-bottom:1px solid var(--border);padding:20px}
+  .product-grid{grid-template-columns:1fr}
+  .auto-grid{grid-template-columns:1fr}
+  .calc-grid{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .trust-row{grid-template-columns:1fr 1fr}
+  .fr{grid-template-columns:1fr}
+}
+@media(max-width:540px){
+  .nav-right a:not(.btn-cta):not(.nav-phone){display:none}
+}
+
+/* ANIM */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .55s ease forwards;opacity:0}
+.d1{animation-delay:.08s}.d2{animation-delay:.18s}.d3{animation-delay:.28s}.d4{animation-delay:.38s}
+</style>
+</head>
+<body>
+
+<!-- ALERT BAR -->
+<div id="alert-bar">
+  <div class="alert-inner">
+    <span class="alert-pill">&#9888; NEP Active</span>
+    <span class="alert-text">OSHA Combustible Dust enforcement is targeting NAICS 322211 <span>right now</span></span>
+    <span id="alert-timer">Loading&hellip;</span>
+    <a href="#book" class="alert-cta">Get Free Snapshot</a>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">Industrial<b>Safe</b>AI</a>
+    <div class="nav-right">
+      <a href="mailto:contact@industrialsafeai.com">contact@industrialsafeai.com</a>
+      <a href="tel:6518009470" class="nav-phone">651-800-9470</a>
+      <a href="#book" class="btn-cta">Free Snapshot &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-wrap">
+  <div>
+    <div class="hero-eyebrow fu">For Corrugated &amp; Packaging Plants</div>
+    <h1 class="fu d1">Your <em>AI-Powered</em><br>EHS Department.<br>$1,000/month.</h1>
+    <p class="hero-price-line fu d2">vs. <strong>$80,000+/yr</strong> for a full-time EHS hire &nbsp;&middot;&nbsp; vs. <strong>$165,514</strong> for one willful citation</p>
+    <p class="hero-sub fu d2">We automate every OSHA regulation change, keep your written programs current, and generate inspection-ready evidence packs on demand &mdash; backed by 7 years inside corrugated plants. No compliance team required.</p>
+    <div class="hero-proof fu d3">
+      <div class="proof-row"><div class="dot"></div><strong>Free first visit:</strong>&nbsp;On-site 2026 Readiness Snapshot, zero obligation</div>
+      <div class="proof-row"><div class="dot"></div><strong>Real data:</strong>&nbsp;Your plant&rsquo;s actual OSHA inspection history, not generic stats</div>
+      <div class="proof-row"><div class="dot"></div><strong>2 hrs/month</strong>&nbsp;of your time &mdash; the system runs everything else automatically</div>
+      <div class="proof-row"><div class="dot"></div><strong>Working since 2017</strong>&nbsp;inside corrugated plants &mdash; we know what OSHA looks for</div>
+    </div>
+    <div class="hero-btns fu d4">
+      <a href="#book" class="btn-primary">Book Free Snapshot &rarr;</a>
+      <a href="#product" class="btn-ghost">See What&rsquo;s Automated</a>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-wrap fu d2">
+    <div class="quiz-top">
+      <h3>&#9889; 2026 Readiness Check</h3>
+      <p>5 questions &middot; Instant risk score &middot; No email required</p>
+    </div>
+    <div class="quiz-body" id="quiz-body">
+      <div class="qprog" id="qprog"></div>
+      <div class="quiz-q-text" id="quiz-q"></div>
+      <div class="q-opts" id="quiz-opts"></div>
+      <div class="q-nav">
+        <button class="q-back" id="q-back" style="display:none">&larr; Back</button>
+        <button class="q-next" id="q-next" disabled>Next &rarr;</button>
+      </div>
+    </div>
+    <div id="quiz-result"></div>
+  </div>
+</div>
+
+<!-- REPLACE ROW -->
+<div class="replace-row">
+  <div class="replace-inner">
+    <div class="replace-item">
+      <div class="replace-vs">You&rsquo;re replacing</div>
+      <div class="replace-cost cost-bad">$80K+</div>
+      <div class="replace-label">Full-time EHS Manager salary + benefits + overhead per year</div>
+    </div>
+    <div class="replace-item">
+      <div class="replace-vs">You&rsquo;re avoiding</div>
+      <div class="replace-cost cost-bad">$165K</div>
+      <div class="replace-label">Max willful OSHA violation &mdash; one citation costs more than a year of service</div>
+    </div>
+    <div class="replace-item">
+      <div class="replace-vs">Your investment</div>
+      <div class="replace-cost cost-good">$1,000</div>
+      <div class="replace-label">Per plant per month. Cancel anytime. First visit is always free.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT BREAKDOWN -->
+<section id="product">
+  <div class="s-inner">
+    <div class="s-tag">OSHA Shield &mdash; $1,000/month</div>
+    <h2>What Runs <em>Automatically</em><br>While You Run Your Plant</h2>
+    <p class="s-lead">Here&rsquo;s exactly what the AI does on its own versus the ~2 hours per month that stays with you.</p>
+    <div class="product-grid">
+      <div class="product-sidebar">
+        <h3>OSHA Shield</h3>
+        <div class="price-big">$1,000</div>
+        <div class="price-sub">per plant &middot; per month &middot; cancel anytime</div>
+        <p class="sidebar-desc">Full regulatory coverage for one plant. AI handles the ongoing work &mdash; you stay ahead of OSHA without adding headcount or manual effort.</p>
+        <div class="what-tag tag-auto">&#129302; AI does this automatically</div>
+        <p style="font-size:.83rem;color:var(--muted);line-height:1.6;margin-bottom:20px">Every item in the right panel runs without you touching it. Federal Register, OSHA IMIS, NFPA feeds &mdash; all free government data, monitored daily.</p>
+        <div class="time-math">
+          <strong>Your true time cost:</strong><br>
+          ~2 hrs/month reviewing digests<br>
+          = $240 of your time at $120/hr<br>
+          = <strong style="color:var(--yellow)">$1,240 all-in for full EHS coverage</strong><br>
+          vs. $80K+/yr EHS hire
+        </div>
+        <div style="margin-top:20px">
+          <a href="#book" class="btn-primary" style="width:100%;display:block;text-align:center">Start for Free &rarr;</a>
+        </div>
+      </div>
+      <div class="product-main">
+        <div class="what-tag tag-auto" style="margin-bottom:16px">&#129302; Runs automatically &mdash; zero time from you</div>
+        <div class="auto-grid">
+          <div class="auto-card">
+            <div class="ac-icon">&#128225;</div>
+            <h4>Regulation Monitoring</h4>
+            <p>Federal Register polled daily for OSHA changes affecting NAICS 322211. NEP updates, enforcement memos, and penalty changes tracked in real time.</p>
+          </div>
+          <div class="auto-card">
+            <div class="ac-icon">&#128203;</div>
+            <h4>Plain-English Summaries</h4>
+            <p>Every regulation change gets an AI-generated summary: what changed, what it means for corrugated plants, what action is required and by when.</p>
+          </div>
+          <div class="auto-card">
+            <div class="ac-icon">&#9997;</div>
+            <h4>Written Program Redlines</h4>
+            <p>When OSHA changes a standard, your LOTO, HazCom, Combustible Dust, and Confined Space programs are auto-redlined. You review, approve, done.</p>
+          </div>
+          <div class="auto-card">
+            <div class="ac-icon">&#128269;</div>
+            <h4>Citation Intelligence</h4>
+            <p>What MN and WI corrugated plants got cited for this month, exact dollar amounts, and what each citation reveals about OSHA&rsquo;s current inspection focus.</p>
+          </div>
+          <div class="auto-card">
+            <div class="ac-icon">&#128202;</div>
+            <h4>OSHA 300/300A Automation</h4>
+            <p>Incident logs automated and formatted to OSHA standards. Annual 300A summary generated in January. Audit trail maintained automatically.</p>
+          </div>
+          <div class="auto-card">
+            <div class="ac-icon">&#128230;</div>
+            <h4>Audit-Ready Evidence Packs</h4>
+            <p>When OSHA shows up, generate a complete evidence pack in minutes: policies, change history, training records, inspection logs &mdash; organized for the inspector.</p>
+          </div>
+        </div>
+        <div class="yours-section">
+          <div class="what-tag tag-yours" style="margin-bottom:12px">&#10003; Your time &mdash; approx. 2 hrs/month</div>
+          <div class="yours-list">
+            <div class="yours-item">Review weekly digest email</div>
+            <div class="yours-item">Approve program redlines</div>
+            <div class="yours-item">Sign off on updated procedures</div>
+            <div class="yours-item">Quarterly on-site walk (optional add-on)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calc">
+  <div class="s-inner">
+    <div class="s-tag">Your Numbers</div>
+    <h2>What&rsquo;s the <em>Real Cost</em><br>of Doing Nothing?</h2>
+    <p class="s-lead">Enter your plant profile to see estimated fine exposure, available savings, and how fast the service pays for itself.</p>
+    <div class="calc-grid">
+      <div class="calc-card">
+        <h3>&#127981; Plant Exposure Estimator</h3>
+        <div class="cf">
+          <label>Facility Size</label>
+          <select id="c-size">
+            <option value="">Select...</option>
+            <option value="s">Small &mdash; Under 50 employees</option>
+            <option value="m">Medium &mdash; 50&ndash;200 employees</option>
+            <option value="l">Large &mdash; 200&ndash;500 employees</option>
+            <option value="e">Enterprise &mdash; 500+ employees</option>
+          </select>
+        </div>
+        <div class="cf">
+          <label>Last OSHA Inspection</label>
+          <select id="c-insp">
+            <option value="">Select...</option>
+            <option value="r">Within 2 years</option>
+            <option value="m">3&ndash;7 years ago</option>
+            <option value="o">8+ years ago</option>
+            <option value="n">Never / unknown</option>
+          </select>
+        </div>
+        <div class="cf">
+          <label>Combustible Dust Program Status</label>
+          <select id="c-dust">
+            <option value="">Select...</option>
+            <option value="none">No written program</option>
+            <option value="old">Program not updated in 2+ years</option>
+            <option value="cur">Updated within the last year</option>
+            <option value="ok">NFPA 660 compliant</option>
+          </select>
+        </div>
+        <div class="cf">
+          <label>Annual Workers&rsquo; Comp Premium (est.)</label>
+          <select id="c-wc">
+            <option value="">Select...</option>
+            <option value="50">Under $50K/yr</option>
+            <option value="150">$50K&ndash;$200K/yr</option>
+            <option value="400">$200K&ndash;$600K/yr</option>
+            <option value="1000">$600K+/yr</option>
+          </select>
+        </div>
+        <button class="calc-btn" onclick="doCalc()">Calculate My Exposure &rarr;</button>
+        <div class="calc-out" id="calc-out">
+          <div class="out-section out-danger">
+            <div class="out-label">Estimated Max Fine Exposure</div>
+            <div class="out-big" id="out-fine">$0</div>
+            <div class="out-sub" id="out-fine-sub"></div>
+          </div>
+          <div class="out-section out-safe">
+            <div class="out-label">1-Year Savings Opportunity</div>
+            <div class="out-rows">
+              <div class="out-row"><span>Workers&rsquo; comp premium credit (est.)</span><span class="val" id="out-wc">$0</span></div>
+              <div class="out-row"><span>Penalties avoided (annualized risk)</span><span class="val" id="out-pen">$0</span></div>
+              <div class="out-row"><span>Section 179 equipment deduction</span><span class="val" id="out-179">$0</span></div>
+              <div class="out-row"><span>EHS labor hours recovered (est.)</span><span class="val" id="out-labor">$0</span></div>
+            </div>
+            <div class="out-total"><span>Total 1-Year Opportunity</span><span id="out-total">$0</span></div>
+          </div>
+          <div style="background:rgba(240,180,41,.05);border:1px solid rgba(240,180,41,.15);border-radius:3px;padding:14px;font-size:.85rem;color:var(--muted);line-height:1.55;margin-top:10px">
+            <span id="out-payback"></span>
+            <br><br>
+            <a href="#book" class="btn-primary" style="font-size:.85rem;padding:10px 20px">Book Free Snapshot &rarr;</a>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="context-card">
+          <h4>&#9889; Why the Math Works in Your Favor</h4>
+          <p>OSHA&rsquo;s Combustible Dust NEP is actively targeting corrugated plants with NAICS 322211 &mdash; not someday, right now in 2026. Inspectors are walking facilities with your exact SIC code on a priority list.</p>
+          <p>In 2025, OSHA maximum willful penalties hit <strong>$165,514 per violation</strong>. One inspection with multiple combustible dust counts can trigger $300K&ndash;$500K in total citations.</p>
+          <p>Your EHS manager &mdash; if you have one &mdash; spends <strong>10&ndash;20 hours/month</strong> manually tracking regulation changes. At even $80/hr loaded cost, that&rsquo;s $800&ndash;$1,600/month of labor doing what our system does automatically.</p>
+          <p>The question isn&rsquo;t whether $1,000/month is worth it. It&rsquo;s whether you want to find out the hard way that it was.</p>
+        </div>
+        <div class="quote-card">
+          <p>&ldquo;They found dust accumulation above a conveyor we&rsquo;d stopped seeing. It was exactly the kind of thing an OSHA inspector would have flagged &mdash; and they knew which regulation it fell under before they finished the sentence.&rdquo;</p>
+          <cite>&mdash; EHS Manager, corrugated facility, Minnesota</cite>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="s-inner">
+    <div class="s-tag">Pricing</div>
+    <h2>Start Free. <em>Scale</em> as You Grow.</h2>
+    <p class="s-lead">Every engagement starts with a free on-site snapshot. No contract. No commitment. The first invoice comes after you&rsquo;ve seen the value.</p>
+    <div class="pricing-grid">
+      <div class="p-card">
+        <div class="p-tier">Starter</div>
+        <div class="p-name">Snapshot</div>
+        <div class="p-price"><span class="amount">$0</span><span class="freq">one-time</span></div>
+        <div class="p-divider"></div>
+        <ul class="p-features">
+          <li>On-site Dust Hazard walkdown</li>
+          <li>OSHA 2026 gap assessment</li>
+          <li>1&ndash;2 page Readiness Report</li>
+          <li>3&ndash;5 prioritized actions with dollar risk</li>
+          <li>Corrugator, converting, MCC, warehouse</li>
+          <li>Align with your existing scheduled visit</li>
+          <li class="dim">No ongoing monitoring</li>
+          <li class="dim">No program automation</li>
+        </ul>
+        <a href="#book" class="btn-p btn-p-outline">Book Free Snapshot &rarr;</a>
+      </div>
+      <div class="p-card p-featured">
+        <div class="p-tier">Recommended</div>
+        <div class="p-name">OSHA Shield</div>
+        <div class="p-price"><span class="amount">$1,000</span><span class="freq">/mo per plant</span></div>
+        <div class="p-divider"></div>
+        <ul class="p-features">
+          <li>Everything in Snapshot</li>
+          <li>Daily OSHA regulation monitoring (your NAICS)</li>
+          <li>Weekly plain-English digest: what changed, what to do</li>
+          <li>Auto-redlined written program updates</li>
+          <li>Citation intelligence &mdash; MN/WI peer plants</li>
+          <li>OSHA 300/300A log automation</li>
+          <li>Audit-ready evidence packs on demand</li>
+          <li>Inspection tracking: your plant + state peers</li>
+          <li>Cancel anytime &mdash; no long-term contract</li>
+        </ul>
+        <a href="#book" class="btn-p btn-p-solid">Start OSHA Shield &rarr;</a>
+      </div>
+      <div class="p-card">
+        <div class="p-tier">Full Automation</div>
+        <div class="p-name">OSHA Fortress</div>
+        <div class="p-price"><span class="amount">$2,500</span><span class="freq">/mo per plant</span></div>
+        <div class="p-divider"></div>
+        <ul class="p-features">
+          <li>Everything in Shield</li>
+          <li>Quarterly on-site dust accumulation check</li>
+          <li>Mock inspection: what OSHA would find today</li>
+          <li>Full written safety program library (15&ndash;20 programs)</li>
+          <li>NFPA 660 Dust Hazard Analysis included</li>
+          <li>Citation defense drafting &mdash; if OSHA shows up</li>
+          <li>Predictive risk analytics: leading indicators</li>
+          <li>Dedicated response line &mdash; real-time inspection guidance</li>
+        </ul>
+        <a href="#book" class="btn-p btn-p-outline">Get Custom Quote &rarr;</a>
+      </div>
+    </div>
+    <div class="trust-row">
+      <div class="trust-cell"><div class="tn">7 yrs</div><div class="tl">Inside corrugated plants</div></div>
+      <div class="trust-cell"><div class="tn">$165K</div><div class="tl">Max willful penalty you&rsquo;re avoiding</div></div>
+      <div class="trust-cell"><div class="tn">2 hrs</div><div class="tl">Your time per month to stay compliant</div></div>
+      <div class="trust-cell"><div class="tn">$0</div><div class="tl">First visit &mdash; zero risk to you</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="s-inner">
+    <div class="s-tag">FAQ</div>
+    <h2>Questions We <em>Always</em> Get</h2>
+    <div class="faq-wrap">
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">Why $1,000/month? That seems steep. <span class="ficon">+</span></button>
+        <div class="faq-a">At $1,000/month you&rsquo;re getting the equivalent of a part-time EHS function. A full-time EHS manager runs $80K&ndash;$110K/year before benefits and overhead &mdash; and still can&rsquo;t monitor every regulation change daily. One serious OSHA citation averages $15,625. One willful violation can reach $165,514. OSHA Shield pays for itself the moment it helps you avoid a single citation, which typically happens in the first 90 days. Month-to-month, cancel anytime.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">What do I actually have to do each month? <span class="ficon">+</span></button>
+        <div class="faq-a">About 2 hours. You&rsquo;ll get a weekly digest email (5&ndash;10 minute read) covering what changed and what action is needed. When a regulation requires a program update, you&rsquo;ll receive a redlined document for review &mdash; typically a 20-minute task. Everything else is automated: monitoring, drafting, logging, citation tracking, evidence pack generation.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">We already have a safety consultant. Do we still need this? <span class="ficon">+</span></button>
+        <div class="faq-a">Most OSHA consultants charge $150&ndash;$300/hour and are reactive &mdash; you call them when something happens. Our system is proactive and continuous: it monitors 365 days a year and keeps documentation current between visits. Many consultants use our platform to do more for their clients. Think of it as 24/7 regulatory intelligence that makes your consultant&rsquo;s time more valuable, not redundant.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">We haven&rsquo;t been inspected in years. Are we really at risk? <span class="ficon">+</span></button>
+        <div class="faq-a">Yes &mdash; and the longer the gap, the higher the risk. The Combustible Dust NEP targets corrugated plants by NAICS code systematically. A long gap means your written programs likely don&rsquo;t reflect OSHA standard changes over that period, which creates compounding violation exposure when the inspector does arrive. The plants that pass inspections cleanly have current programs and a clear evidence trail.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">How quickly can we get started after the free snapshot? <span class="ficon">+</span></button>
+        <div class="faq-a">The free snapshot is 2&ndash;4 hours on-site. Readiness Report delivered within 48 hours. If you move to OSHA Shield, monitoring starts immediately and you receive your first weekly digest within 7 days. Written program updates follow within 2&ndash;3 weeks. Full onboarding &mdash; OSHA 300 log setup, evidence pack framework &mdash; is complete within 30 days.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="tog(this)">Do you work outside Minnesota? <span class="ficon">+</span></button>
+        <div class="faq-a">The OSHA Shield monitoring platform covers all 50 states and all 22 state-plan OSHA jurisdictions. For on-site visits outside the Twin Cities metro, we schedule during existing travel or begin with a remote assessment. Our corrugated expertise is national &mdash; the dust accumulation patterns in a corrugated plant are the same in Georgia as in Minnesota.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK -->
+<section id="book">
+  <div class="book-inner">
+    <div class="s-tag" style="text-align:center">Get Started</div>
+    <h2>Book Your <em>Free</em><br>2026 Readiness Snapshot</h2>
+    <p class="book-sub">On-site walkdown + prioritized action report. We align with a scheduled visit so there&rsquo;s zero production disruption. No obligation. No invoice until you see the value.</p>
+    <div class="book-form">
+      <form action="https://formsubmit.co/contact@industrialsafeai.com" method="POST">
+        <input type="hidden" name="_subject" value="New 2026 Readiness Snapshot Request">
+        <input type="hidden" name="_next" value="https://industrialsafeai.com/thank-you">
+        <input type="hidden" name="_captcha" value="false">
+        <div class="fr">
+          <div class="ff"><label>Your Name *</label><input type="text" name="name" placeholder="Jane Smith" required></div>
+          <div class="ff"><label>Title / Role</label><input type="text" name="title" placeholder="EHS Manager"></div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Company / Plant Name *</label><input type="text" name="company" placeholder="Acme Corrugated LLC" required></div>
+          <div class="ff"><label>Plant Location *</label><input type="text" name="location" placeholder="Minneapolis, MN" required></div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Work Email *</label><input type="email" name="email" placeholder="jane@plant.com" required></div>
+          <div class="ff"><label>Phone (call or text)</label><input type="tel" name="phone" placeholder="651-555-0100"></div>
+        </div>
+        <div class="fr">
+          <div class="ff fc"><label>Preferred Dates (2&ndash;3 options)</label><input type="text" name="dates" placeholder="Any Tuesday morning, or week of April 7"></div>
+        </div>
+        <div class="fr">
+          <div class="ff fc"><label>Biggest OSHA concern right now? (optional)</label><textarea name="concern" placeholder="Combustible dust accumulation, outdated programs, upcoming inspection..."></textarea></div>
+        </div>
+        <button type="submit" class="submit-btn">Book My Free Snapshot &mdash; Zero Obligation &rarr;</button>
+        <p class="form-note">Or reach us directly: <a href="mailto:contact@industrialsafeai.com">contact@industrialsafeai.com</a> &nbsp;&middot;&nbsp; <a href="tel:6518009470">651-800-9470</a></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <a href="#" class="footer-logo">Industrial<b>Safe</b>AI LLC</a>
+    <p>&copy; 2026 IndustrialSafeAI LLC &middot; OSHA &amp; Combustible Dust Compliance Automation for Corrugated Plants</p>
+    <div class="footer-links">
+      <a href="mailto:contact@industrialsafeai.com">contact@industrialsafeai.com</a>
+      <a href="tel:6518009470">651-800-9470</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// COUNTDOWN
+(function(){
+  const t=new Date('2027-01-01T00:00:00');
+  function u(){
+    const d=Math.floor((t-Date.now())/86400000);
+    document.getElementById('alert-timer').textContent=d+' days to 2027 enforcement';
+  }
+  u();setInterval(u,60000);
+})();
+
+// QUIZ
+const QS=[
+  {q:"When was your combustible dust written program last updated?",opts:[{t:"Within the last 12 months",r:0},{t:"1\u20133 years ago",r:1},{t:"3+ years ago",r:2},{t:"We don't have a written program",r:3}]},
+  {q:"How often are elevated areas (beams, ledges, ductwork) checked for dust accumulation?",opts:[{t:"Weekly or more",r:0},{t:"Monthly",r:1},{t:"Quarterly or less",r:2},{t:"Not on a formal schedule",r:3}]},
+  {q:"When did OSHA last inspect your facility?",opts:[{t:"Within the last 2 years",r:0},{t:"3\u20137 years ago",r:1},{t:"8+ years ago",r:2},{t:"Never / not sure",r:3}]},
+  {q:"Do contractors have plant-specific dust hazard training records on file?",opts:[{t:"Yes \u2014 current, signed, plant-specific records",r:0},{t:"Generic contractor safety program only",r:1},{t:"Informal orientation, no written records",r:2},{t:"No formal contractor safety program",r:3}]},
+  {q:"Does someone actively monitor OSHA changes for your NAICS code?",opts:[{t:"Yes \u2014 dedicated staff or consultant tracks it",r:0},{t:"Occasionally, when we hear about changes",r:1},{t:"Rarely \u2014 rely on industry associations",r:2},{t:"No active monitoring",r:3}]}
+];
+let cur=0,scores=[],sel=null;
+function renderQ(){
+  const q=QS[cur];
+  document.getElementById('quiz-q').innerHTML='<span class="qn">Q'+(cur+1)+'</span>'+q.q;
+  const o=document.getElementById('quiz-opts');o.innerHTML='';
+  q.opts.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='q-opt';
+    b.innerHTML='<div class="radio"></div>'+opt.t;
+    b.onclick=()=>{
+      document.querySelectorAll('.q-opt').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');sel=i;
+      document.getElementById('q-next').disabled=false;
+    };
+    o.appendChild(b);
+  });
+  const dots=document.getElementById('qprog');dots.innerHTML='';
+  QS.forEach((_,i)=>{
+    const d=document.createElement('div');d.className='qp';
+    if(i<cur)d.classList.add('done');
+    if(i===cur)d.classList.add('active');
+    dots.appendChild(d);
+  });
+  document.getElementById('q-back').style.display=cur>0?'block':'none';
+  document.getElementById('q-next').disabled=true;sel=null;
+}
+document.getElementById('q-next').onclick=()=>{
+  if(sel===null)return;
+  scores[cur]=QS[cur].opts[sel].r;cur++;
+  cur<QS.length?renderQ():showR();
+};
+document.getElementById('q-back').onclick=()=>{if(cur>0){cur--;renderQ();}};
+function showR(){
+  document.getElementById('quiz-body').style.display='none';
+  const tot=scores.reduce((a,b)=>a+b,0),pct=Math.round(tot/(QS.length*3)*100);
+  let cls,badge,title,items;
+  if(pct>=60){cls='rh';badge='HIGH RISK';title='Immediate Action Required';items=['Combustible dust program likely non-compliant with 2026 standards','Elevated area gaps are the #1 citation trigger in corrugated plants','Active NEP means OSHA could walk in this quarter']}
+  else if(pct>=30){cls='rm';badge='MODERATE RISK';title='Action Needed Before Next Inspection';items=['2\u20133 compliance gaps likely visible in a walkthrough','Program documentation may not reflect recent OSHA/NFPA changes','A free snapshot will identify and prioritize your specific exposure']}
+  else{cls='rl';badge='LOWER RISK';title='Strong Foundation \u2014 Stay Current';items=['Your practices are above average for corrugated plants','Ongoing monitoring will keep you ahead of 2026 updates','A snapshot confirms your status and catches hidden gaps']}
+  const r=document.getElementById('quiz-result');
+  r.innerHTML='<div class="q-result '+cls+'"><span class="risk-badge">'+badge+'</span><div class="risk-title">'+title+'</div><div class="risk-meter-wrap"><div class="risk-fill" id="rfill"></div></div><div class="risk-items"><p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">Based on your responses:</p><ul>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ul></div><a href="#book" class="btn-primary" style="width:100%;display:block;text-align:center;margin-bottom:10px">Book Free Snapshot &rarr;</a><button onclick="restartQ()" style="width:100%;background:none;border:none;color:var(--muted);font-size:.82rem;cursor:pointer;padding:6px 0">Retake assessment</button></div>';
+  r.style.display='block';
+  setTimeout(()=>{const f=document.getElementById('rfill');if(f)f.style.width=pct+'%';},80);
+}
+function restartQ(){cur=0;scores=[];sel=null;document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-result').innerHTML='';document.getElementById('quiz-body').style.display='block';renderQ();}
+renderQ();
+
+// CALCULATOR
+function doCalc(){
+  const sz=document.getElementById('c-size').value;
+  const ins=document.getElementById('c-insp').value;
+  const du=document.getElementById('c-dust').value;
+  const wc=document.getElementById('c-wc').value;
+  if(!sz||!ins||!du||!wc){alert('Please fill in all four fields.');return;}
+  const fBase={s:35000,m:85000,l:165514,e:165514};
+  const fIns={r:.5,m:.8,o:1.1,n:1.35};
+  const fDu={none:1.5,old:1.1,cur:.65,ok:.25};
+  const fine=Math.round(fBase[sz]*fIns[ins]*fDu[du]/1000)*1000;
+  const wcAmt=Math.round(parseInt(wc)*0.12);
+  const penAmt=Math.round(fine*.12);
+  const s179={s:10000,m:30000,l:70000,e:130000};
+  const laborHrs={s:8,m:14,l:20,e:28};
+  const laborAmt=laborHrs[sz]*120*12;
+  const total=wcAmt+penAmt+s179[sz]+laborAmt;
+  const paybackMos=Math.max(1,Math.ceil(12000/total*12));
+  document.getElementById('out-fine').textContent='$'+fine.toLocaleString();
+  document.getElementById('out-fine-sub').textContent='Estimated maximum OSHA exposure based on your size, inspection history, and program status. Willful violations cap at $165,514 per count.';
+  document.getElementById('out-wc').textContent='$'+wcAmt.toLocaleString()+'/yr';
+  document.getElementById('out-pen').textContent='$'+penAmt.toLocaleString()+'/yr';
+  document.getElementById('out-179').textContent='$'+s179[sz].toLocaleString()+'/yr';
+  document.getElementById('out-labor').textContent='$'+laborAmt.toLocaleString()+'/yr';
+  document.getElementById('out-total').textContent='$'+total.toLocaleString();
+  document.getElementById('out-payback').innerHTML='<strong style="color:var(--yellow)">OSHA Shield pays for itself in under '+paybackMos+' month'+(paybackMos===1?'':'s')+'</strong> \u2014 before counting citation avoidance.';
+  document.getElementById('calc-out').style.display='block';
+}
+
+// FAQ
+function tog(btn){
+  const a=btn.nextElementSibling;const o=btn.classList.contains('open');
+  document.querySelectorAll('.faq-q.open').forEach(q=>{q.classList.remove('open');q.nextElementSibling.classList.remove('open');});
+  if(!o){btn.classList.add('open');a.classList.add('open');}
+}
+</script>
+</body>
+</html>

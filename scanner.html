@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DustSafeAI Scanner — Combustible Dust Assessment</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Familjen+Grotesk:wght@400;500;600;700&display=swap');
+:root{
+  --y:#F5C518;--yd:#d4a80e;--yg:rgba(245,197,24,.1);--yb:rgba(245,197,24,.22);
+  --ink:#050506;--s1:#0a0a0b;--s2:#101012;--s3:#161618;--s4:#202023;
+  --border:#1c1c1f;--bhi:#2a2a2e;
+  --text:#e8e8ea;--muted:#666671;--ghost:#282830;
+  --red:#F04444;--rdim:rgba(240,68,68,.1);--rborder:rgba(240,68,68,.22);
+  --green:#22C55E;--gdim:rgba(34,197,94,.1);--gborder:rgba(34,197,94,.25);
+  --amber:#FBBF24;--adim:rgba(251,191,36,.1);--aborder:rgba(251,191,36,.25);
+  --blue:#60A5FA;--bdim:rgba(96,165,250,.1);--bborder:rgba(96,165,250,.22);
+  --D:'Bebas Neue',sans-serif;--B:'Familjen Grotesk',system-ui,sans-serif;--r:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--ink);color:var(--text);font-family:var(--B);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#app{min-height:100vh;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(5,5,6,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 clamp(1rem,4vw,2rem);height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.tb-logo{font-family:var(--D);font-size:20px;color:var(--y);letter-spacing:.04em;text-decoration:none}
+.tb-logo span{color:var(--muted)}
+.tb-step{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-right{margin-left:auto;flex-shrink:0;font-size:11px;color:var(--ghost)}
+.tb-right.saved{color:var(--green)}
+.prog-rail{height:2px;background:var(--s4);flex-shrink:0}
+.prog-fill{height:100%;background:var(--y);transition:width .4s ease}
+.main{flex:1;padding:clamp(1.25rem,4vw,2.5rem) clamp(1rem,4vw,2rem);max-width:680px;margin:0 auto;width:100%}
+.eye{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ghost);margin-bottom:.5rem}
+.stitle{font-family:var(--D);font-size:clamp(28px,6vw,44px);letter-spacing:.02em;color:var(--text);line-height:.95;margin-bottom:.6rem}
+.stitle em{font-style:normal;color:var(--y)}
+.ssub{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:1.75rem}
+.fg{margin-bottom:.875rem}
+.fg label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--y);margin-bottom:4px}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--B);font-size:14px;padding:10px 12px;outline:none;transition:border-color .14s;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--y)}
+.fg textarea{resize:vertical;min-height:72px}
+.fg select option{background:var(--s3)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+@media(max-width:420px){.fg2{grid-template-columns:1fr}}
+.btn-p{display:block;width:100%;border:none;border-radius:var(--r);background:var(--y);color:var(--ink);font-family:var(--D);font-size:17px;letter-spacing:.07em;padding:15px;cursor:pointer;transition:background .14s,transform .1s;text-align:center}
+.btn-p:hover{background:var(--yd);transform:translateY(-1px)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-s{display:inline-flex;align-items:center;gap:6px;background:var(--s3);border:1px solid var(--bhi);border-radius:var(--r);color:var(--muted);font-family:var(--B);font-size:13px;font-weight:500;padding:9px 16px;cursor:pointer;transition:border-color .14s,color .14s}
+.btn-s:hover{border-color:var(--muted);color:var(--text)}
+.navrow{display:flex;gap:10px;margin-top:1.5rem;align-items:center}
+.navrow .btn-p{flex:1}
+.upload-zone{border:2px dashed var(--bhi);border-radius:var(--r);background:var(--s3);padding:1.5rem;text-align:center;cursor:pointer;transition:border-color .14s,background .14s;position:relative;overflow:hidden}
+.upload-zone:hover{border-color:var(--y);background:var(--yg)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uz-icon{font-size:28px;margin-bottom:.5rem}
+.uz-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.uz-s{font-size:11px;color:var(--muted)}
+.uz-f{margin-top:.5rem;font-size:10px;color:var(--ghost)}
+.up-ok{background:var(--gdim);border:1px solid var(--gborder);border-radius:4px;padding:.75rem 1rem;margin-top:.75rem;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--green)}
+.up-ok .uname{color:var(--text);font-weight:500;font-size:13px;flex:1}
+.up-ok button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}
+.resume-b{background:var(--bdim);border:1px solid var(--bborder);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.rb-t{flex:1;font-size:13px;color:var(--text)}
+.rb-t small{display:block;font-size:11px;color:var(--muted)}
+.rb-btn{background:var(--y);color:var(--ink);border:none;border-radius:4px;font-family:var(--D);font-size:13px;letter-spacing:.04em;padding:7px 14px;cursor:pointer;white-space:nowrap}
+.rb-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;padding:0;line-height:1}
+.zpills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem}
+.zpill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;transition:all .14s}
+.zpill.active{border-color:var(--y);background:var(--yg);color:var(--y)}
+.zpill.complete{border-color:var(--gborder);background:var(--gdim);color:var(--green)}
+.cp-zlbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.cp-num{font-family:var(--D);font-size:13px;letter-spacing:.06em;color:var(--ghost);margin-bottom:.25rem}
+.cp-title{font-family:var(--D);font-size:clamp(20px,5vw,28px);letter-spacing:.03em;color:var(--text);line-height:1;margin-bottom:.6rem}
+.cp-q{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:.75rem;font-weight:500}
+.cp-cite{font-size:10px;font-family:monospace;color:var(--ghost);letter-spacing:.03em;margin-bottom:1rem}
+.guide-btn{display:flex;align-items:center;gap:6px;background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:.6rem .875rem;cursor:pointer;margin-bottom:.75rem;font-size:12px;color:var(--muted);transition:border-color .14s;width:100%;text-align:left}
+.guide-btn:hover{border-color:var(--bhi);color:var(--text)}
+.guide-body{background:var(--bdim);border:1px solid var(--bborder);border-left:3px solid var(--blue);border-radius:4px;padding:.875rem 1rem;margin-bottom:1rem;font-size:13px;color:var(--muted);line-height:1.65;display:none}
+.guide-body.open{display:block}
+.guide-body strong{color:var(--text)}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.card-hd{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-hd-t{font-family:var(--D);font-size:17px;letter-spacing:.04em;color:var(--text)}
+.card-hd-s{font-size:11px;color:var(--muted);margin-top:1px}
+.card-b{padding:1.25rem}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1.25rem}
+.sbtn{border:1px solid var(--border);border-radius:4px;background:var(--s3);padding:.75rem .25rem;text-align:center;cursor:pointer;transition:all .14s}
+.sbtn:hover{border-color:var(--bhi)}
+.sbtn .si{font-size:16px;display:block;margin-bottom:3px}
+.sbtn .sl{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block}
+.sbtn.sg{border-color:var(--gborder);background:var(--gdim)}.sbtn.sg .sl{color:var(--green)}
+.sbtn.sr{border-color:var(--aborder);background:var(--adim)}.sbtn.sr .sl{color:var(--amber)}
+.sbtn.sk{border-color:var(--rborder);background:var(--rdim)}.sbtn.sk .sl{color:var(--red)}
+.sbtn.sn{border-color:var(--bborder);background:var(--bdim)}.sbtn.sn .sl{color:var(--blue)}
+.photo-up{background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:1rem;margin-bottom:1rem}
+.pu-lbl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--y);margin-bottom:.5rem;display:block}
+.pbtn{display:flex;align-items:center;gap:8px;background:var(--s4);border:1px solid var(--bhi);border-radius:4px;padding:.75rem 1rem;cursor:pointer;font-size:13px;color:var(--text);font-weight:500;position:relative;overflow:hidden;width:100%;text-align:left;transition:border-color .14s}
+.pbtn:hover{border-color:var(--y)}
+.pbtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ptags{margin-top:.6rem;display:flex;flex-wrap:wrap;gap:5px}
+.ptag{display:inline-flex;align-items:center;gap:5px;background:var(--gdim);border:1px solid var(--gborder);border-radius:3px;padding:2px 8px;font-size:11px;color:var(--green)}
+.ptag button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.dtag{display:inline-flex;align-items:center;gap:5px;background:var(--bdim);border:1px solid var(--bborder);border-radius:3px;padding:2px 8px;font-size:11px;color:var(--blue)}
+.dtag button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.sstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1.5rem}
+.ss{background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:.875rem .5rem;text-align:center}
+.ss-n{font-family:var(--D);font-size:28px;line-height:1;letter-spacing:.02em}
+.ss-l{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.04em;text-transform:uppercase}
+.ng{color:var(--green)}.nr{color:var(--amber)}.nk{color:var(--red)}.nn{color:var(--blue)}
+.risk-box{background:var(--rdim);border:1px solid var(--rborder);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.5rem}
+.risk-box-t{font-family:var(--D);font-size:15px;letter-spacing:.04em;color:var(--red);margin-bottom:.4rem}
+.ri{font-size:12.5px;color:var(--muted);padding:.3rem 0;border-bottom:1px solid rgba(240,68,68,.12)}
+.ri:last-child{border-bottom:none}
+.ri strong{color:var(--text)}
+.rzwrap{margin-bottom:1.25rem}
+.rzhd{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;background:var(--s3);border-radius:4px 4px 0 0;border:1px solid var(--border);border-bottom:none}
+.rzhd-t{font-family:var(--D);font-size:15px;letter-spacing:.04em;color:var(--text);flex:1}
+.rzcounts{display:flex;gap:6px;flex-shrink:0}
+.rzcount{font-size:10px;padding:1px 7px;border-radius:20px;font-weight:600;letter-spacing:.04em}
+.rzg{color:var(--green);background:var(--gdim);border:1px solid var(--gborder)}
+.rzr{color:var(--amber);background:var(--adim);border:1px solid var(--aborder)}
+.rzk{color:var(--red);background:var(--rdim);border:1px solid var(--rborder)}
+.rzbody{border:1px solid var(--border);border-radius:0 0 4px 4px;overflow:hidden}
+.rzcp{display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);font-size:12.5px}
+.rzcp:last-child{border-bottom:none}
+.rzcp-t{color:var(--text);font-weight:500}
+.rzcp-n{font-size:11px;color:var(--muted);margin-top:1px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.bg{color:var(--green);background:var(--gdim);border:1px solid var(--gborder)}
+.br{color:var(--amber);background:var(--adim);border:1px solid var(--aborder)}
+.bk{color:var(--red);background:var(--rdim);border:1px solid var(--rborder)}
+.bn{color:var(--blue);background:var(--bdim);border:1px solid var(--bborder)}
+.be{color:var(--muted);background:var(--s3);border:1px solid var(--border)}
+.success-sc{text-align:center;padding:2rem 0}
+.suc-icon{font-size:56px;margin-bottom:1rem}
+.suc-title{font-family:var(--D);font-size:36px;letter-spacing:.04em;color:var(--y);margin-bottom:.5rem}
+.suc-body{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:1.5rem}
+.suc-ref{background:var(--s2);border:1px solid var(--bhi);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;text-align:left}
+.suc-ref-l{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:.4rem}
+.suc-ref-v{font-size:14px;font-weight:600;color:var(--y);font-family:monospace}
+.suc-phone{font-family:monospace;font-size:22px;font-weight:700;color:var(--y)}
+.foot-note{font-size:11px;color:var(--ghost);text-align:center;margin-top:1rem;line-height:1.5;padding-bottom:2rem}
+.schema-types{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem}
+.stype{background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:.875rem;cursor:pointer;transition:all .14s;text-align:center}
+.stype:hover{border-color:var(--bhi)}
+.stype.sel{border-color:var(--y);background:var(--yg)}
+.stype-ic{font-size:20px;margin-bottom:.3rem}
+.stype-l{font-size:12px;font-weight:500;color:var(--text)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const ZONES=[
+  {id:1,icon:'🌫️',title:'Dust Accumulation',short:'Accumulation',refs:'NFPA 654 §7.1 · NFPA 660 §5.3 · OSHA NEP',cps:['z1c1','z1c2','z1c3','z1c4','z1c5','z1c6']},
+  {id:2,icon:'🧹',title:'Housekeeping Program',short:'Housekeeping',refs:'29 CFR 1910.141 · NFPA 654 §8 · OSHA 2026',cps:['z2c1','z2c2','z2c3','z2c4','z2c5','z2c6']},
+  {id:3,icon:'📄',title:'Written Programs',short:'Programs',refs:'29 CFR 1910.1200 · NFPA 654 §4 · OSHA 2026',cps:['z3c1','z3c2','z3c3','z3c4','z3c5','z3c6']},
+  {id:4,icon:'🦺',title:'Contractor Safety',short:'Contractors',refs:'OSHA 1910.119(h) · NFPA 654 §12 · GDC',cps:['z4c1','z4c2','z4c3','z4c4','z4c5','z4c6']},
+  {id:5,icon:'⚡',title:'Ignition Control',short:'Ignition',refs:'NFPA 68 · NFPA 70 Art. 502 · NFPA 654 §11',cps:['z5c1','z5c2','z5c3','z5c4','z5c5','z5c6']},
+];
+const CPS={
+  z1c1:{zone:1,num:1,title:'Overhead Beams & Structural Steel',question:'Are overhead beams, purlins, and structural steel in production areas free of visible dust accumulation at or above 1/32"?',guidance:'The 1/32" threshold is approximately the thickness of a paper clip. Check beams directly above conveyors, processing equipment, and packaging lines. Look for discoloration or visible layering on horizontal surfaces. If you can write your name in it, it exceeds the threshold.',citation:'29 CFR 1910.272 · NFPA 654 §7.1 · OSHA NEP Protocol',photoReq:true,docReq:false},
+  z1c2:{zone:1,num:2,title:'Conveyor Lines & Transfer Points',question:'Are conveyor frames, rollers, return idlers, and transfer points free of combustible dust accumulation?',guidance:'Transfer points are the highest-accumulation areas on most conveyor systems — dust falls and collects on the frame below. Check under conveyor belts, on the ledge of the tail pulley, and on horizontal frame members within 3 feet of any transfer point.',citation:'NFPA 654 §7.1 · NFPA 660 §5.3',photoReq:true,docReq:false},
+  z1c3:{zone:1,num:3,title:'Ductwork Exterior Surfaces',question:'Are the exterior surfaces of ductwork, dust collection pipes, and pneumatic conveying lines free of dust accumulation?',guidance:'Focus on horizontal runs and any ledges created by duct hangers or support brackets. Dust accumulation on duct exteriors can also indicate a leak point — document both the accumulation and any visible leaks.',citation:'NFPA 654 §7.1 · NFPA 660 §5.3',photoReq:true,docReq:false},
+  z1c4:{zone:1,num:4,title:'Light Fixtures, Conduit & Cable Trays',question:'Are light fixtures, conduit runs, and cable trays free of dust accumulation?',guidance:'Light fixture tops and cable tray horizontal surfaces are frequently missed in housekeeping rounds. These are also close to ignition sources. Pay special attention in areas with combustible metal dust where even a thin layer on an electrical surface is a serious hazard.',citation:'NFPA 654 §7.1 · NFPA 70 Art. 502',photoReq:true,docReq:false},
+  z1c5:{zone:1,num:5,title:'Top of Equipment & Machinery',question:'Are the tops of processing equipment, hoppers, bins, and machinery free of dust accumulation?',guidance:'Equipment tops are a priority location in NFPA 660 inspections. Look for any horizontal surface above head height. Motor housings, fan shrouds, and drive guards are particularly prone to accumulation.',citation:'NFPA 654 §7.1 · NFPA 660 §5.3 · OSHA NEP',photoReq:true,docReq:false},
+  z1c6:{zone:1,num:6,title:'Mezzanines, Catwalks & Elevated Platforms',question:'Are mezzanine floors, catwalks, elevated platforms, and their structural supports free of dust accumulation?',guidance:'These areas are often cleaned less frequently than the main floor. Check the grating surfaces, the underside of grating (where dust collects in pockets), and the structural members below. Secondary explosion potential is highest when elevated dust is disturbed.',citation:'NFPA 654 §7.1 · OSHA NEP Protocol',photoReq:true,docReq:false},
+  z2c1:{zone:2,num:1,title:'Written Housekeeping Program',question:'Is there a written combustible dust housekeeping program on file, dated within the last 5 years, specific to this facility?',guidance:'The program must identify: (1) areas covered, (2) cleaning frequency by area, (3) approved cleaning methods, (4) responsible personnel, and (5) waste disposal procedures. A generic industry template without facility-specific details does not satisfy this requirement.',citation:'NFPA 654 §8 · 29 CFR 1910.141 · OSHA 2026 NEP',photoReq:false,docReq:true},
+  z2c2:{zone:2,num:2,title:'Cleaning Frequency Log — Last 90 Days',question:'Are signed cleaning frequency logs available for the last 90 days covering all production areas in the written program?',guidance:'Inspectors look for logs that match the written program frequency. If your program says weekly cleaning and the log shows monthly entries, the discrepancy is citable. Missing a week without explanation is a yellow flag — two or more gaps is a red flag.',citation:'NFPA 654 §8 · 29 CFR 1910.141',photoReq:false,docReq:true},
+  z2c3:{zone:2,num:3,title:'Cleaning Method Documentation',question:'Is cleaning method documentation on file showing HEPA vacuum use as the primary method where combustible dust is present?',guidance:'NFPA 660 makes vacuuming the preferred cleaning method. Compressed air blow-down is only permitted where vacuuming is not feasible — and that determination must be documented. This is a common citation.',citation:'NFPA 660 §8.3 · NFPA 654 §8',photoReq:false,docReq:true},
+  z2c4:{zone:2,num:4,title:'Dust Waste Disposal Records',question:'Are records available showing how combustible dust waste is collected, labeled, and disposed of?',guidance:'Collected dust waste must be treated as a hazardous material — stored in labeled, closed containers and disposed of per your SDS and local regulations. Disposing of collected dust via open dumpster or mixing with general waste is a potential citation.',citation:'NFPA 654 §8 · 29 CFR 1910.141',photoReq:false,docReq:false},
+  z2c5:{zone:2,num:5,title:'Supervisor Inspection Records',question:'Are supervisor-signed inspection records on file documenting periodic inspections of dust-generating areas?',guidance:'Beyond the cleaning log, NFPA 660 requires documented management oversight. Supervisor inspection records show OSHA that the housekeeping program has management accountability — not just worker execution.',citation:'NFPA 654 §8 · NFPA 660 Ch. 8',photoReq:false,docReq:true},
+  z2c6:{zone:2,num:6,title:'Log vs. Observed Conditions Match',question:'Do the cleaning log entries accurately reflect observed dust conditions in production areas?',guidance:'This is the most dangerous discrepancy for willful classification. If the log shows a recent cleaning but dust accumulation is visible and measurable, the inspector will note the contradiction. Take a photo of both the current condition and the most recent log entry.',citation:'OSHA Willful Classification · NFPA 654 §8',photoReq:true,docReq:false},
+  z3c1:{zone:3,num:1,title:'Combustible Dust Management Program',question:'Is there a written combustible dust management program on file that is facility-specific, current, and dated?',guidance:'This is distinct from the housekeeping program. The dust management program must address: hazard identification, engineering controls, administrative controls, emergency response, and training requirements.',citation:'NFPA 654 §4 · NFPA 660 Ch. 8 · OSHA NEP',photoReq:false,docReq:true},
+  z3c2:{zone:3,num:2,title:'Dust Hazard Analysis (DHA) — Currency Check',question:'Is the most recent DHA on file, completed within the last 5 years, and does it reflect the current facility layout and processes?',guidance:'NFPA 660 requires DHA revalidation at least every 5 years, or when significant process changes occur. Note the exact completion date on the document. If processes have changed since completion, it may need revalidation even if the 5-year clock has not expired.',citation:'NFPA 660 §4.3 · NFPA 652 §7.1 · OSHA NEP',photoReq:false,docReq:true},
+  z3c3:{zone:3,num:3,title:'HazCom SDS — GHS Rev. 7 Update Status',question:'Has the facility SDS library been reviewed and updated to comply with OSHA Hazard Communication GHS Revision 7 (2026 deadline)?',guidance:'GHS Rev. 7 changes SDS formatting requirements, hazard classification criteria, and label elements for many dust-generating materials. For combustible dust specifically, it adds clearer requirements for how combustible dust hazards appear on Safety Data Sheets.',citation:'29 CFR 1910.1200 · GHS Rev. 7 · OSHA 2026 NEP',photoReq:false,docReq:true},
+  z3c4:{zone:3,num:4,title:'LOTO — Combustible Dust Provisions',question:'Do LOTO procedures reference combustible dust classification for equipment in dust-generating areas?',guidance:'29 CFR 1910.147 requires LOTO procedures to address all energy sources — including the hazard created when equipment is serviced in a combustible dust environment. A LOTO procedure for a conveyor in a classified area that does not mention dust is incomplete.',citation:'29 CFR 1910.147 · NFPA 654 §12 · OSHA 2026',photoReq:false,docReq:true},
+  z3c5:{zone:3,num:5,title:'Hot Work Permit — Dust Reference',question:'Does the hot work permit program specifically reference combustible dust hazards and require area clearance before hot work in dust-generating zones?',guidance:'Hot work permits must explicitly address the combustible dust classification of the work area. The permit should require a dust accumulation check before work begins. A generic hot work permit without dust-specific language is a common citation.',citation:'NFPA 51B · NFPA 654 §11 · OSHA NEP',photoReq:false,docReq:true},
+  z3c6:{zone:3,num:6,title:'Employee Training Records — Dust-Specific',question:'Are training records on file showing that employees in combustible dust areas received dust-specific hazard training, with dates and signatures?',guidance:'General safety training is not sufficient. NFPA 660 requires employees to receive training specific to combustible dust hazards in their work areas — including recognition of accumulation, the 1/32" threshold concept, and what to do if they observe unsafe conditions.',citation:'NFPA 660 Ch. 8 · 29 CFR 1910.1200 · OSHA NEP',photoReq:false,docReq:true},
+  z4c1:{zone:4,num:1,title:'Contractor Written Scope of Work',question:'Is there a written scope of work on file for every contractor currently working in or near dust-generating areas?',guidance:'The written scope must describe the work being performed and specifically acknowledge the combustible dust hazards in the work area. A purchase order without dust hazard language does not satisfy this requirement. This is the fastest-growing citation category in manufacturing under OSHA NEP.',citation:'OSHA 1910.119(h) · NFPA 654 §12 · GDC',photoReq:false,docReq:true},
+  z4c2:{zone:4,num:2,title:'Site Entry Hazard Communication Records',question:'Are records on file documenting that contractors received site-specific combustible dust hazard communication before beginning work?',guidance:'OSHA 1910.119(h) requires host employers to inform contractors of known hazards. For combustible dust facilities, this means documented communication about dust classifications, accumulation thresholds, and housekeeping requirements. Verbal briefings alone are not sufficient.',citation:'OSHA 1910.119(h) · 29 CFR 1910.1200',photoReq:false,docReq:true},
+  z4c3:{zone:4,num:3,title:'Contractor Visit & Service Logs',question:'Are service logs on file for all contractors showing dates, personnel on-site, and work performed for the last 12 months?',guidance:'Service logs establish the documented history of contractor presence. Without them, OSHA cannot verify hazard communication records, and the employer cannot demonstrate control over the work environment.',citation:'OSHA 1910.119(h) · NFPA 654 §12',photoReq:false,docReq:true},
+  z4c4:{zone:4,num:4,title:'Job Site Analysis (JSA) Documents',question:'Are completed JSA documents on file for contractors performing work that could disturb or generate combustible dust?',guidance:'JSAs for work in combustible dust environments must specifically identify dust-related hazards. Activities that require JSAs include: grinding, cutting, drilling, blowing down equipment, maintenance on dust collectors, and any hot work.',citation:'OSHA 1910.119(h) · NFPA 654 §12',photoReq:false,docReq:true},
+  z4c5:{zone:4,num:5,title:'Contractor Dust Hazard Acknowledgment',question:'Have contractors signed written acknowledgment forms confirming they understand the combustible dust hazards at this facility?',guidance:'Beyond verbal briefing, OSHA expects a documented acknowledgment. The key elements: contractor name, date, facility, specific acknowledgment of combustible dust classification, and signature. This can be part of the site entry form or a standalone document.',citation:'OSHA 1910.119(h) · 29 CFR 1910.1200',photoReq:false,docReq:true},
+  z4c6:{zone:4,num:6,title:'Active Contractor Records — All Current',question:'Are all records (scope, hazard comm., JSA, service log) current for every contractor actively performing work at this facility right now?',guidance:'Walk through every currently active contractor and verify all four record types are present and current. A contractor whose paperwork was completed 2 years ago but who is still performing regular service needs updated records.',citation:'OSHA 1910.119(h) · NFPA 654 §12',photoReq:false,docReq:false},
+  z5c1:{zone:5,num:1,title:'Explosion Venting Panels — Documentation',question:'Is documentation on file for all explosion venting panels and relief devices, including installation specs, inspection records, and area covered?',guidance:'Documentation must include: device specifications, the hazard area each device protects, installation date, and inspection/maintenance records. NFPA 68 requires periodic inspection. The documentation should match the physical device.',citation:'NFPA 68 · NFPA 660 §11 · OSHA NEP',photoReq:true,docReq:true},
+  z5c2:{zone:5,num:2,title:'Class II Electrical Area Classification',question:'Are Class II electrical area classification records on file, including a classified area drawing showing the boundaries of hazardous locations?',guidance:'NFPA 70 Article 502 requires that areas where combustible dust may be present have proper electrical classification. The classification record includes a drawing showing Class II Division 1 and 2 boundaries. All electrical equipment in classified areas must be rated for the classification.',citation:'NFPA 70 Art. 502 · NFPA 499 · OSHA NEP',photoReq:false,docReq:true},
+  z5c3:{zone:5,num:3,title:'Spark Detection — Maintenance Logs',question:'If spark detection/suppression systems are installed, are inspection and maintenance logs current with no overdue service intervals?',guidance:'Spark detection systems require periodic inspection and calibration per manufacturer specifications. If the facility has no spark detection system, note N/A and document why — some configurations require it under NFPA 654.',citation:'NFPA 654 §11 · NFPA 660 §11',photoReq:false,docReq:true},
+  z5c4:{zone:5,num:4,title:'Grounding & Bonding Documentation',question:'Is documentation on file confirming that all equipment, containers, and piping in combustible dust areas are properly grounded and bonded?',guidance:'NFPA 660 requires grounding and bonding of all conductive equipment in classified areas. Documentation must include: the grounding/bonding design, verification test records (resistance checks), and any corrective action history.',citation:'NFPA 654 §11.3 · NFPA 660 §11 · NFPA 70',photoReq:true,docReq:true},
+  z5c5:{zone:5,num:5,title:'Dust Collector — Inspection & Maintenance',question:'Are inspection and maintenance records current for all dust collection equipment, including filter condition, differential pressure logs, and explosion protection checks?',guidance:'Dust collectors concentrate combustible dust — making them the highest-risk single piece of equipment in most facilities. Records must show: filter inspection/replacement history, differential pressure readings, inspection of explosion relief panels, and any bypass conditions documented.',citation:'NFPA 654 §11 · NFPA 660 §11 · OSHA NEP',photoReq:true,docReq:true},
+  z5c6:{zone:5,num:6,title:'Hot Work — Active Permit Review',question:'If hot work has been performed in the last 30 days, are signed permits on file with post-work fire watch documented?',guidance:'Hot work permits must be site- and date-specific. Each permit should show: work location, hazard assessment including dust classification check, work description, fire watch assignment, post-work fire watch period (typically 60 minutes minimum), and supervisor sign-off.',citation:'NFPA 51B · NFPA 654 §11 · OSHA NEP',photoReq:false,docReq:true},
+};
+
+const SK='dustsafe_v3';
+let S={screen:'welcome',facility:{name:'',contact:'',title:'',email:'',phone:'',state:'',industry:''},schematic:{file:'',type:''},findings:{},zone:0,cp:0,gopen:{},submitted:false,ref:''};
+
+function ss(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+function ls(){try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);if(p&&p.facility)return p;}}catch(e){}return null;}
+function cs(){localStorage.removeItem(SK);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(b){if(b<1024)return b+'B';if(b<1048576)return Math.round(b/1024)+'KB';return (b/1048576).toFixed(1)+'MB';}
+function cpid(){return ZONES[S.zone].cps[S.cp];}
+function cpd(){return CPS[cpid()];}
+function gf(id){return S.findings[id]||{status:'',notes:'',location:'',photos:[],docs:[]};}
+function total(){return Object.keys(CPS).length;}
+function done(){return Object.values(S.findings).filter(f=>f.status).length;}
+function zcomplete(zi){return ZONES[zi].cps.every(id=>S.findings[id]&&S.findings[id].status);}
+function cnt(st){return Object.values(S.findings).filter(f=>f.status===st).length;}
+function risks(){return Object.entries(S.findings).filter(([,f])=>f.status==='risk').map(([id])=>({id,cp:CPS[id],f:S.findings[id]}));}
+function slabel(s){return {good:'Good',review:'Review',risk:'High Risk',na:'N/A','':'Not set'}[s]||s;}
+function sclass(s){return {good:'bg',review:'br',risk:'bk',na:'bn','':'be'}[s]||'be';}
+function pct(){
+  if(S.screen==='welcome')return 0;
+  if(S.screen==='schematic')return 8;
+  if(S.screen==='zone'){const b=15+(S.zone/5)*70;const f=S.cp/ZONES[S.zone].cps.length;return Math.round(b+f*14);}
+  if(S.screen==='review')return 93;
+  if(S.screen==='success')return 100;
+  return 0;
+}
+function steplbl(){
+  if(S.screen==='welcome')return 'Step 1 of 5 — Facility Info';
+  if(S.screen==='schematic')return 'Step 2 of 5 — Floor Plan Upload';
+  if(S.screen==='zone')return 'Step 3 of 5 — Zone '+ZONES[S.zone].id+': '+ZONES[S.zone].short+' · CP '+(S.cp+1)+'/'+ZONES[S.zone].cps.length;
+  if(S.screen==='review')return 'Step 4 of 5 — Review & Submit';
+  if(S.screen==='success')return 'Step 5 of 5 — Complete';
+  return '';
+}
+
+function goTo(scr){S.screen=scr;ss();render();}
+function goZone(zi){S.zone=zi;S.cp=0;S.screen='zone';ss();render();}
+function jumpZone(zi){S.zone=zi;S.cp=0;S.screen='zone';ss();render();}
+function jumpZoneCp(zi,ci){S.zone=zi;S.cp=ci;S.screen='zone';ss();render();}
+
+function nextCp(){
+  const id=cpid();
+  if(!S.findings[id]||!S.findings[id].status){alert('Please select a finding status to continue.');return;}
+  const zone=ZONES[S.zone];
+  if(S.cp<zone.cps.length-1){S.cp++;ss();render();}
+  else if(S.zone<ZONES.length-1){S.zone++;S.cp=0;ss();render();}
+  else{goTo('review');}
+}
+function prevCp(){
+  if(S.cp>0){S.cp--;ss();render();}
+  else if(S.zone>0){S.zone--;S.cp=ZONES[S.zone].cps.length-1;ss();render();}
+  else{goTo('schematic');}
+}
+
+function doResume(){const sv=ls();if(sv){Object.assign(S,sv);render();}}
+function doClear(){if(confirm('Start a new scan? Current progress will be cleared.')){cs();S={screen:'welcome',facility:{name:'',contact:'',title:'',email:'',phone:'',state:'',industry:''},schematic:{file:'',type:''},findings:{},zone:0,cp:0,gopen:{},submitted:false,ref:''};render();}}
+
+function goSch(){
+  const nm=document.getElementById('fn')?.value||'';
+  const em=document.getElementById('fe')?.value||'';
+  if(!nm.trim()){alert('Please enter your facility name.');return;}
+  if(!em.trim()||!em.includes('@')){alert('Please enter a valid work email.');return;}
+  S.facility.name=nm;S.facility.email=em;
+  S.facility.contact=document.getElementById('fc')?.value||'';
+  S.facility.title=document.getElementById('ft')?.value||'';
+  S.facility.phone=document.getElementById('fp')?.value||'';
+  S.facility.state=document.getElementById('fst')?.value||'';
+  S.facility.industry=document.getElementById('fi')?.value||'';
+  ss();goTo('schematic');
+}
+
+function setSch(type){S.schematic.type=type;ss();render();}
+function clrSch(){S.schematic.file='';ss();render();}
+function schUpload(inp){if(inp.files&&inp.files[0]){S.schematic.file=inp.files[0].name;if(!S.schematic.type)S.schematic.type='other';ss();render();}}
+
+function setStatus(id,st){
+  if(!S.findings[id])S.findings[id]={status:'',notes:'',location:'',photos:[],docs:[]};
+  S.findings[id].status=st;ss();render();
+}
+function setNote(id,v){if(!S.findings[id])S.findings[id]={status:'',notes:'',location:'',photos:[],docs:[]};S.findings[id].notes=v;ss();}
+function setLoc(id,v){if(!S.findings[id])S.findings[id]={status:'',notes:'',location:'',photos:[],docs:[]};S.findings[id].location=v;ss();}
+function toggleGuide(id){S.gopen[id]=!S.gopen[id];render();}
+
+function addPhotos(id,inp){
+  if(!S.findings[id])S.findings[id]={status:'',notes:'',location:'',photos:[],docs:[]};
+  if(!S.findings[id].photos)S.findings[id].photos=[];
+  Array.from(inp.files).forEach(f=>S.findings[id].photos.push({name:f.name,size:fmt(f.size)}));
+  ss();render();
+}
+function rmPhoto(id,i){if(S.findings[id]&&S.findings[id].photos){S.findings[id].photos.splice(i,1);ss();render();}}
+function addDocs(id,inp){
+  if(!S.findings[id])S.findings[id]={status:'',notes:'',location:'',photos:[],docs:[]};
+  if(!S.findings[id].docs)S.findings[id].docs=[];
+  Array.from(inp.files).forEach(f=>S.findings[id].docs.push({name:f.name,size:fmt(f.size)}));
+  ss();render();
+}
+function rmDoc(id,i){if(S.findings[id]&&S.findings[id].docs){S.findings[id].docs.splice(i,1);ss();render();}}
+
+function buildReport(){
+  const now=new Date();
+  const ds=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const g=cnt('good'),r=cnt('review'),k=cnt('risk'),n=cnt('na'),t=done();
+  let txt='DUSTSAFEAI SCANNER SUBMISSION\n'+'='.repeat(60)+'\n';
+  txt+='Facility:     '+S.facility.name+'\n';
+  txt+='EHS Contact:  '+S.facility.contact+' / '+S.facility.title+'\n';
+  txt+='Email:        '+S.facility.email+'\n';
+  txt+='Phone:        '+S.facility.phone+'\n';
+  txt+='State:        '+S.facility.state+'\n';
+  txt+='Industry:     '+S.facility.industry+'\n';
+  txt+='Date:         '+ds+'\n';
+  txt+='Schematic:    '+(S.schematic.file||'Not uploaded')+(S.schematic.type?' ('+S.schematic.type+')':'')+'\n';
+  txt+='Checkpoints:  '+t+' of 30 completed\n\n';
+  txt+='SUMMARY\n'+'─'.repeat(40)+'\n';
+  txt+='Good: '+g+' | Review: '+r+' | High Risk: '+k+' | N/A: '+n+'\n\n';
+  const rks=risks();
+  if(rks.length){
+    txt+='HIGH-RISK FINDINGS ('+rks.length+')\n'+'─'.repeat(40)+'\n';
+    rks.forEach(({cp,f})=>{
+      txt+='• '+cp.title+'\n';
+      if(f.location)txt+='  Location: '+f.location+'\n';
+      if(f.notes)txt+='  Notes: '+f.notes+'\n';
+      txt+='  Citation: '+cp.citation+'\n\n';
+    });
+  }
+  ZONES.forEach(z=>{
+    txt+='\n'+'='.repeat(60)+'\n'+z.icon+' ZONE '+z.id+': '+z.title.toUpperCase()+'\n'+z.refs+'\n'+'─'.repeat(40)+'\n';
+    z.cps.forEach(id=>{
+      const cp=CPS[id];const f=gf(id);
+      const st={good:'✓ GOOD',review:'⚠ REVIEW',risk:'✗ HIGH RISK',na:'— N/A','':'○ NOT SET'}[f.status]||f.status;
+      txt+='\nCP '+cp.num+': '+cp.title+'\nStatus: '+st+'\n';
+      if(f.location)txt+='Location: '+f.location+'\n';
+      if(f.notes)txt+='Notes: '+f.notes+'\n';
+      if(f.photos&&f.photos.length)txt+='Photos: '+f.photos.map(p=>p.name).join(', ')+'\n';
+      if(f.docs&&f.docs.length)txt+='Documents: '+f.docs.map(d=>d.name).join(', ')+'\n';
+      txt+='Citation: '+cp.citation+'\n';
+    });
+  });
+  txt+='\n'+'='.repeat(60)+'\nSubmitted via DustSafeAI Scanner — dustsafeai.com\nIndustrialSafeAI LLC — contact@industrialsafeai.com\n';
+  return txt;
+}
+
+function dlSummary(){
+  const t=buildReport();
+  const b=new Blob([t],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='DustSafeAI_'+(S.facility.name||'Scan').replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
+}
+
+async function doSubmit(){
+  const btn=document.getElementById('sub-btn');
+  if(btn){btn.textContent='Submitting…';btn.disabled=true;}
+  const ref='DSA-'+Date.now().toString(36).toUpperCase();
+  const g=cnt('good'),r=cnt('review'),k=cnt('risk'),n=cnt('na');
+  const payload={
+    _subject:'DustSafeAI Scanner — '+S.facility.name,
+    facility:S.facility.name,contact:S.facility.contact+' / '+S.facility.title,
+    email:S.facility.email,phone:S.facility.phone,state:S.facility.state,industry:S.facility.industry,
+    schematic:S.schematic.file||'Not uploaded',checkpoints:done()+' of 30',
+    summary:'Good:'+g+' Review:'+r+' High Risk:'+k+' N/A:'+n,high_risk:String(k),ref,
+    report:buildReport(),source:'dustsafeai.com scanner'
+  };
+  try{await fetch('https://formsubmit.co/ajax/contact@industrialsafeai.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});}catch(e){}
+  S.submitted=true;S.ref=ref;cs();ss();goTo('success');
+}
+
+function render(){
+  const p=pct();
+  document.getElementById('app').innerHTML=`
+    <div class="topbar">
+      <a href="https://dustsafeai.com" class="tb-logo">DUST<span>SAFE</span>AI</a>
+      <span class="tb-step">${steplbl()}</span>
+      <span class="tb-right ${S.submitted?'saved':''}">${S.submitted?'✓ Submitted':'Auto-saved'}</span>
+    </div>
+    <div class="prog-rail"><div class="prog-fill" style="width:${p}%"></div></div>
+    <div class="main">${rscreen()}</div>`;
+  window.scrollTo(0,0);
+}
+
+function rscreen(){
+  switch(S.screen){
+    case 'welcome':return rWelcome();
+    case 'schematic':return rSch();
+    case 'zone':return rZone();
+    case 'review':return rReview();
+    case 'success':return rSuccess();
+  }
+  return '';
+}
+
+function rWelcome(){
+  const sv=ls();
+  const hasProg=sv&&sv.facility&&sv.facility.name&&!sv.submitted;
+  const doneFromSv=sv&&sv.findings?Object.values(sv.findings).filter(f=>f.status).length:0;
+  const states=['Alabama','Arizona','Arkansas','California','Colorado','Florida','Georgia','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Michigan','Minnesota','Mississippi','Missouri','Nebraska','North Carolina','Ohio','Oklahoma','Pennsylvania','South Carolina','Tennessee','Texas','Virginia','Wisconsin','Other'];
+  const industries=['Corrugated / Packaging','Paper / Pulp','Food Processing','Wood Products','Metal Fabrication','Grain / Agriculture','Plastics / Rubber','Other Manufacturing'];
+  return `
+    ${hasProg?`<div class="resume-b"><div class="rb-t"><strong>Resume your scan</strong><small>${sv.facility.name} — ${doneFromSv} of 30 checkpoints complete</small></div><button class="rb-btn" onclick="doResume()">Resume →</button><button class="rb-x" onclick="doClear()" title="Start fresh">×</button></div>`:''}
+    <div class="eye">DustSafeAI Scanner</div>
+    <h1 class="stitle">Facility<br><em>Info</em></h1>
+    <p class="ssub">Takes 60 seconds. Progress saves automatically — pause and resume at any time.</p>
+    <div class="fg2">
+      <div class="fg"><label>Your Name</label><input type="text" id="fc" value="${esc(S.facility.contact)}" placeholder="First Last" autocomplete="name"></div>
+      <div class="fg"><label>Your Title</label><input type="text" id="ft" value="${esc(S.facility.title)}" placeholder="EHS Manager, Plant Mgr…"></div>
+    </div>
+    <div class="fg"><label>Facility / Plant Name *</label><input type="text" id="fn" value="${esc(S.facility.name)}" placeholder="e.g. Acme Corrugated — Chicago Plant" required></div>
+    <div class="fg2">
+      <div class="fg"><label>Work Email *</label><input type="email" id="fe" value="${esc(S.facility.email)}" placeholder="you@company.com" required></div>
+      <div class="fg"><label>Direct Phone</label><input type="tel" id="fp" value="${esc(S.facility.phone)}" placeholder="(612) 555-0100"></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>State</label><select id="fst">${states.map(s=>`<option${S.facility.state===s?' selected':''}>${s}</option>`).join('')}<option value="">Select…</option></select></div>
+      <div class="fg"><label>Industry</label><select id="fi">${industries.map(s=>`<option${S.facility.industry===s?' selected':''}>${s}</option>`).join('')}<option value="">Select…</option></select></div>
+    </div>
+    <button class="btn-p" onclick="goSch()" style="margin-top:.5rem">NEXT: UPLOAD FLOOR PLAN →</button>
+    <p class="foot-note">All data saves locally to your device. Nothing is sent until you hit Submit.</p>`;
+}
+
+function rSch(){
+  const types=[{id:'cad',icon:'📐',label:'CAD / Blueprint'},{id:'firemarshal',icon:'🏗️',label:'Fire Marshal Plan'},{id:'maintenance',icon:'🖨️',label:'Maintenance Map'},{id:'sketch',icon:'✏️',label:'Hand-Drawn Sketch'},{id:'aerial',icon:'📸',label:'Aerial / Photo'}];
+  return `
+    <div class="eye">Step 2 — Required by NFPA 660 Ch. 7</div>
+    <h1 class="stitle">Upload Your<br><em>Floor Plan</em></h1>
+    <p class="ssub">NFPA 660 Ch. 7 requires the DHA to map every room and compartment where combustible dust is present. Your floor plan anchors every photo to a real location — creating a spatially documented accumulation map.</p>
+    <div class="fg" style="font-size:12.5px;color:var(--muted);margin-bottom:.75rem">Select type:</div>
+    <div class="schema-types">
+      ${types.map(t=>`<div class="stype ${S.schematic.type===t.id?'sel':''}" onclick="setSch('${t.id}')"><div class="stype-ic">${t.icon}</div><div class="stype-l">${t.label}</div></div>`).join('')}
+    </div>
+    ${S.schematic.file?`
+      <div class="up-ok"><span>✓</span><span class="uname">${esc(S.schematic.file)}</span><button onclick="clrSch()">×</button></div>
+    `:`
+      <div class="upload-zone">
+        <input type="file" id="schema-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.dwg,.dxf,.doc,.docx" onchange="schUpload(this)">
+        <div class="uz-icon">🗺️</div>
+        <div class="uz-t">Tap to upload floor plan</div>
+        <div class="uz-s">Or photograph a paper drawing with your phone</div>
+        <div class="uz-f">PDF · JPG · PNG · DWG accepted</div>
+      </div>
+    `}
+    <div style="background:var(--bdim);border:1px solid var(--bborder);border-left:3px solid var(--blue);border-radius:var(--r);padding:1rem 1.25rem;margin:1.25rem 0;font-size:13px;color:var(--muted);line-height:1.6">
+      💡 <strong style="color:var(--text)">No floor plan?</strong> A hand-drawn sketch works — sketch your building outline, label each major production bay, and mark equipment locations. Takes ~10 minutes and satisfies NFPA 660 Ch. 7 spatial documentation.
+    </div>
+    <div class="navrow">
+      <button class="btn-s" onclick="goTo('welcome')">← Back</button>
+      <button class="btn-p" onclick="goZone(0)">${S.schematic.file?'START ZONE 1 →':'SKIP & START ZONE 1 →'}</button>
+    </div>
+    <p class="foot-note">You can add your schematic at any time — it will be noted in your report.</p>`;
+}
+
+function rZone(){
+  const zone=ZONES[S.zone];const id=cpid();const cp=cpd();const f=gf(id);
+  const isLast=S.cp===zone.cps.length-1;const isLastZ=S.zone===ZONES.length-1;
+  const pills=ZONES.map((z,zi)=>`<div class="zpill ${zi===S.zone?'active':''} ${zcomplete(zi)?'complete':''}" onclick="jumpZone(${zi})">${z.icon} ${z.short}${zcomplete(zi)?' ✓':''}</div>`).join('');
+  const stats=[{k:'good',i:'✓',l:'Good'},{k:'review',i:'⚠',l:'Review'},{k:'risk',i:'✗',l:'High Risk'},{k:'na',i:'—',l:'N/A'}];
+  const sbts=stats.map(s=>`<div class="sbtn ${f.status===s.k?'s'+s.k[0]:''}" onclick="setStatus('${id}','${s.k}')"><span class="si">${s.i}</span><span class="sl">${s.l}</span></div>`).join('');
+  const phtos=f.photos&&f.photos.length?`<div class="ptags">${f.photos.map((p,i)=>`<div class="ptag">📷 ${esc(p.name)}<button onclick="rmPhoto('${id}',${i})">×</button></div>`).join('')}</div>`:'';
+  const docs=f.docs&&f.docs.length?`<div class="ptags">${f.docs.map((d,i)=>`<div class="dtag">📄 ${esc(d.name)}<button onclick="rmDoc('${id}',${i})">×</button></div>`).join('')}</div>`:'';
+  return `
+    <div class="zpills">${pills}</div>
+    <div class="cp-zlbl">${zone.icon} ${zone.title} · ${zone.refs}</div>
+    <div class="cp-num">Checkpoint ${cp.num} of ${zone.cps.length}</div>
+    <div class="cp-title">${cp.title}</div>
+    <div class="cp-q">${cp.question}</div>
+    <div class="cp-cite">${cp.citation}</div>
+    <button class="guide-btn" onclick="toggleGuide('${id}')">💡 ${S.gopen[id]?'Hide':'Show'} inspector guidance</button>
+    <div class="guide-body ${S.gopen[id]?'open':''}">${cp.guidance}</div>
+    <div class="card">
+      <div class="card-hd"><span>⚙️</span><div><div class="card-hd-t">Finding Status</div><div class="card-hd-s">Select one — required to advance</div></div></div>
+      <div class="card-b">
+        <div class="sgrid">${sbts}</div>
+        <div class="fg"><label>Location on floor plan</label><input type="text" placeholder="e.g. Bay 3, Grid D-7 · NE corner · Maintenance office" value="${esc(f.location)}" oninput="setLoc('${id}',this.value)"></div>
+        <div class="fg" style="margin-bottom:0"><label>Notes</label><textarea placeholder="Describe what you observed — specific conditions, measurements, anything relevant…" oninput="setNote('${id}',this.value)">${esc(f.notes)}</textarea></div>
+      </div>
+    </div>
+    <div class="photo-up">
+      <span class="pu-lbl">${cp.photoReq?'📸 Photo — Required':'📸 Photo — Optional'}</span>
+      <label class="pbtn"><input type="file" accept="image/*" multiple onchange="addPhotos('${id}',this)">📷 ${f.photos&&f.photos.length?'Add more photos':'Take / upload photo'}</label>
+      ${phtos}
+    </div>
+    ${cp.docReq?`<div class="photo-up"><span class="pu-lbl">📄 Document — Required</span><label class="pbtn"><input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple onchange="addDocs('${id}',this)">📄 ${f.docs&&f.docs.length?'Add more documents':'Upload document'}</label>${docs}</div>`:''}
+    <div class="navrow">
+      <button class="btn-s" onclick="prevCp()">← Back</button>
+      <button class="btn-p" onclick="nextCp()" ${!f.status?'disabled':''}>
+        ${isLast&&isLastZ?'REVIEW & SUBMIT →':isLast?'ZONE '+(S.zone+2)+': '+ZONES[S.zone+1].short+' →':'NEXT →'}
+      </button>
+    </div>
+    <p class="foot-note">${done()} of ${total()} checkpoints complete · Saving automatically</p>`;
+}
+
+function rReview(){
+  const g=cnt('good'),r=cnt('review'),k=cnt('risk'),n=cnt('na'),miss=total()-done();
+  const rks=risks();
+  const rzones=ZONES.map(z=>{
+    const zg=z.cps.filter(id=>S.findings[id]?.status==='good').length;
+    const zr=z.cps.filter(id=>S.findings[id]?.status==='review').length;
+    const zk=z.cps.filter(id=>S.findings[id]?.status==='risk').length;
+    const rows=z.cps.map(id=>{
+      const f=gf(id);const cp=CPS[id];const pc=(f.photos||[]).length;const dc=(f.docs||[]).length;
+      return `<div class="rzcp">
+        <div>
+          <div class="rzcp-t">${cp.title}</div>
+          ${f.location?`<div class="rzcp-n" style="color:var(--blue)">📍 ${esc(f.location)}</div>`:''}
+          ${f.notes?`<div class="rzcp-n">${esc(f.notes.substring(0,80))}${f.notes.length>80?'…':''}</div>`:''}
+          ${pc?`<div class="rzcp-n" style="color:var(--green)">📷 ${pc} photo${pc>1?'s':''}</div>`:''}
+          ${dc?`<div class="rzcp-n" style="color:var(--blue)">📄 ${dc} doc${dc>1?'s':''}</div>`:''}
+        </div>
+        <div>
+          <div class="badge ${sclass(f.status)}">${slabel(f.status)}</div>
+          ${!f.status?`<div style="text-align:center;margin-top:4px"><a href="javascript:jumpZoneCp(${ZONES.indexOf(z)},${z.cps.indexOf(id)})" style="font-size:10px;color:var(--y)">fill in</a></div>`:''}
+        </div>
+      </div>`;}).join('');
+    return `<div class="rzwrap">
+      <div class="rzhd"><span>${z.icon}</span><span class="rzhd-t">${z.title}</span>
+        <div class="rzcounts">
+          ${zg?`<span class="rzcount rzg">${zg}✓</span>`:''}
+          ${zr?`<span class="rzcount rzr">${zr}⚠</span>`:''}
+          ${zk?`<span class="rzcount rzk">${zk}✗</span>`:''}
+        </div>
+      </div>
+      <div class="rzbody">${rows}</div>
+    </div>`;}).join('');
+
+  return `
+    <div class="eye">Review Before Submitting</div>
+    <h1 class="stitle">Your<br><em>Findings</em></h1>
+    <p class="ssub">${miss>0?`<strong style="color:var(--amber)">${miss} checkpoint${miss>1?'s':''} incomplete</strong> — you can still submit and we'll note the gaps.`:'All 30 checkpoints complete.'}</p>
+    <div class="sstats">
+      <div class="ss"><div class="ss-n ng">${g}</div><div class="ss-l">Good</div></div>
+      <div class="ss"><div class="ss-n nr">${r}</div><div class="ss-l">Review</div></div>
+      <div class="ss"><div class="ss-n nk">${k}</div><div class="ss-l">High Risk</div></div>
+      <div class="ss"><div class="ss-n nn">${n}</div><div class="ss-l">N/A</div></div>
+    </div>
+    ${rks.length?`<div class="risk-box"><div class="risk-box-t">⚠ ${rks.length} High-Risk Finding${rks.length>1?'s':''}</div>${rks.map(({cp,f})=>`<div class="ri"><strong>${cp.title}</strong>${f.location?' · 📍 '+f.location:''}${f.notes?'<div style="font-size:11px;margin-top:2px">'+f.notes.substring(0,100)+'</div>':''}</div>`).join('')}</div>`:''}
+    ${rzones}
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-b">
+        <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:1rem">Submitting sends a full report to <strong style="color:var(--text)">contact@industrialsafeai.com</strong> and to <strong style="color:var(--text)">${esc(S.facility.email)}</strong>. Our team reviews every finding against OSHA and NFPA 660 standards and returns your 48-hour report.</p>
+        <p style="font-size:13px;color:var(--amber);line-height:1.65;margin-bottom:1rem">📷 Keep your photos on your device — they are your local evidence file.</p>
+        <button class="btn-p" id="sub-btn" onclick="doSubmit()">SUBMIT SCAN FOR REVIEW →</button>
+        <div style="margin-top:.75rem;text-align:center"><button class="btn-s" onclick="goTo('zone')" style="display:inline-flex;margin:0 auto">← Edit findings</button></div>
+      </div>
+    </div>
+    <p class="foot-note">No cost. No sales call. 48-hour report to your email.</p>`;
+}
+
+function rSuccess(){
+  const g=cnt('good'),r=cnt('review'),k=cnt('risk'),n=cnt('na');
+  return `
+    <div class="success-sc">
+      <div class="suc-icon">⚡</div>
+      <div class="suc-title">SCAN SUBMITTED.</div>
+      <div class="suc-body">Full report summary sent for review.<br>Your 48-hour readiness report will arrive at<br><strong>${esc(S.facility.email)}</strong></div>
+      <div class="suc-ref"><div class="suc-ref-l">Facility</div><div class="suc-ref-v">${esc(S.facility.name)}</div></div>
+      <div class="suc-ref">
+        <div class="suc-ref-l">Scan Summary</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.25rem">
+          <span class="badge bg">${g} Good</span><span class="badge br">${r} Review</span><span class="badge bk">${k} High Risk</span><span class="badge bn">${n} N/A</span>
+        </div>
+      </div>
+      <div class="suc-ref"><div class="suc-ref-l">Reference</div><div class="suc-ref-v">${S.ref}</div></div>
+      <div style="background:var(--adim);border:1px solid var(--aborder);border-radius:var(--r);padding:1.25rem;margin:1.5rem 0;text-align:left">
+        <div style="font-family:var(--D);font-size:14px;letter-spacing:.04em;color:var(--amber);margin-bottom:.5rem">📷 KEEP YOUR PHOTOS</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.65">Your photos remain on your device. Organize them by zone and checkpoint name — they are your local evidence file and will be referenced in your report.</p>
+      </div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:.5rem">Questions before your report arrives?</p>
+      <div class="suc-phone">651-800-9470</div>
+      <p style="font-size:12px;color:var(--ghost);margin-top:.25rem;margin-bottom:1.5rem">Call or text directly</p>
+      <button class="btn-s" onclick="dlSummary()" style="display:inline-flex;margin:0 auto">↓ Download text summary</button>
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
